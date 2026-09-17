@@ -1,0 +1,40 @@
+{
+  "environment": {
+    "stage": "static",
+    "route_clearance_weight": 4.0,
+    "sensor_outage_probability": 0.005,
+    "shield": true,
+    "train_unshielded_fraction": 0.2,
+    "obstacle_command_penalty": 0.15,
+    "sensor_command_penalty": 0.005,
+    "intervention_penalty": 0.0,
+    "intervention_onset_penalty": 0.0
+  },
+  "training": {
+    "n_envs": 8,
+    "vector_backend": "subproc",
+    "device": "cuda:0",
+    "torch_threads": 1,
+    "n_steps": 512,
+    "batch_size": 512,
+    "n_epochs": 2,
+    "learning_rate": 0.00001,
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "clip_range": 0.05,
+    "ent_coef": 0.0,
+    "target_kl": 0.005,
+    "behavior_cloning_episodes": 200,
+    "behavior_cloning_epochs": 20,
+    "behavior_cloning_batch_size": 512,
+    "behavior_cloning_learning_rate": 0.0003,
+    "behavior_cloning_log_std": -2.0,
+    "behavior_cloning_on_resume": true,
+    "behavior_cloning_unshielded": true,
+    "total_timesteps": 100000,
+    "eval_freq": 25000,
+    "eval_episodes": 30,
+    "dual_validation": true,
+    "checkpoint_freq": 25000
+  }
+}

@@ -75,3 +75,34 @@ count only enforced stops; an unshielded run can therefore have zero
 interventions and many unsafe commands. Reward magnitudes across the old/new
 profiles are not directly comparable. Compare success, contacts, timeouts,
 route availability, and intervention causes instead.
+
+## Expert distillation after PPO plateaus
+
+On static validation seeds 12000–12099, the non-privileged route follower
+completed 100/100 episodes unshielded with zero collisions. It uses estimated
+route lookahead and goal distance already represented in the policy input. The
+continued PPO checkpoint produced exactly the same guarded and unshielded
+results as its source `best.zip`, showing that checkpoint selection retained
+the initial model rather than finding an improvement.
+
+`configs/server_static_distill.json` therefore performs behavioral cloning on
+200 successful, unshielded route-follower episodes when resuming, saves the
+post-cloning actor as `distilled.zip`, evaluates it before PPO updates, and then
+runs 100,000 conservative PPO steps. The source run remains untouched. This is
+policy distillation from a conventional controller in simulation; it does not
+prove real-world performance or make the controller itself a safety authority.
+
+```bash
+python scripts/server_sweep.py \
+  --config configs/server_static_distill.json \
+  --output runs/server-static-v3-distilled \
+  --resume-from runs/server-static-v3-avoidance-continued \
+  --resume-checkpoint best.zip \
+  --stage static --steps 100000 \
+  --seeds 2 3 --devices cuda:0 cuda:1
+```
+
+Behavior cloning runs before PPO progress tables and can be quiet while it
+collects demonstrations. Each run writes `distilled.zip`, `best_guarded.zip`,
+and dual validation logs. Evaluate `best.zip` and `distilled.zip`; PPO may fail
+to improve the distilled actor, and `final.zip` is not automatically preferred.

@@ -96,18 +96,23 @@ def main():
                     n_steps=n_steps, batch_size=batch, n_epochs=training.get("n_epochs", 5),
                     tensorboard_log=str(run/"tensorboard"),
                     policy_kwargs={"net_arch": {"pi": [128, 128], "vf": [128, 128]}}, verbose=1)
-        cloning_episodes = training.get("behavior_cloning_episodes", 0)
-        if cloning_episodes:
-            from .bootstrap import collect_demonstrations, clone_policy
-            observations, actions = collect_demonstrations(robot, config, cloning_episodes,
-                                                            args.seed*100000)
-            losses = clone_policy(model, observations, actions,
-                                  training.get("behavior_cloning_epochs", 10),
-                                  training.get("behavior_cloning_batch_size", 512),
-                                  training.get("behavior_cloning_learning_rate", 3e-4),
-                                  training.get("behavior_cloning_log_std", -1.), args.seed)
-            print(f"Behavior cloning: {len(observations)} samples, "
-                  f"loss {losses[0]:.6f} -> {losses[-1]:.6f}", flush=True)
+    cloning_episodes = training.get("behavior_cloning_episodes", 0)
+    clone_now = cloning_episodes and (not args.resume or training.get("behavior_cloning_on_resume", False))
+    if clone_now:
+        from .bootstrap import collect_demonstrations, clone_policy
+        demonstration_config = config
+        if training.get("behavior_cloning_unshielded", False):
+            demonstration_config = replace(config, shield=False, train_unshielded_fraction=0.)
+        observations, actions = collect_demonstrations(robot, demonstration_config,
+                                                        cloning_episodes, args.seed*100000)
+        losses = clone_policy(model, observations, actions,
+                              training.get("behavior_cloning_epochs", 10),
+                              training.get("behavior_cloning_batch_size", 512),
+                              training.get("behavior_cloning_learning_rate", 3e-4),
+                              training.get("behavior_cloning_log_std", -1.), args.seed)
+        model.save(run/"distilled")
+        print(f"Behavior cloning: {len(observations)} samples, "
+              f"loss {losses[0]:.6f} -> {losses[-1]:.6f}; saved distilled.zip", flush=True)
     from .evaluate import evaluate_model
 
     class Validation(BaseCallback):

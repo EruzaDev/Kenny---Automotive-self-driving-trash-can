@@ -75,3 +75,12 @@ def test_new_profile_preserves_contract_and_validates_settings():
     for value in (-1., float("inf"), float("nan")):
         with pytest.raises(ValueError):
             EnvConfig(obstacle_command_penalty=value)
+
+
+def test_distillation_profile_resumes_with_unshielded_expert():
+    r, old, _ = load_config("configs/server_static_avoidance.json")
+    r2, new, training = load_config("configs/server_static_distill.json")
+    assert KennyEnv(r, old).contract() == KennyEnv(r2, new).contract()
+    assert training["behavior_cloning_on_resume"]
+    assert training["behavior_cloning_unshielded"]
+    assert training["behavior_cloning_episodes"] == 200
