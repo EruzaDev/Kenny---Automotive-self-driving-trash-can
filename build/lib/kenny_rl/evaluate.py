@@ -1,0 +1,69 @@
+"""Held-out evaluation with separate collision, cliff, timeout and intervention metrics."""
+import argparse
+from dataclasses import replace
+import json
+from pathlib import Path
+import numpy as np
+from .config import load_config
+from .env import KennyEnv
+
+
+def evaluate_model(model, robot, config, episodes, seed=20000):
+    if episodes < 1:
+        raise ValueError("episodes must be positive")
+    env = KennyEnv(robot, config)
+    records = []
+    try:
+        for i in range(episodes):
+            obs, _ = env.reset(seed=seed+i)
+            reward_sum = 0.
+            done = False
+            while not done:
+                action, _ = model.predict(obs, deterministic=True)
+                obs, reward, terminated, truncated, info = env.step(action)
+                reward_sum += reward
+                done = terminated or truncated
+            records.append({**info, "seed": seed+i, "reward": reward_sum})
+    finally:
+        env.close()
+    return {"episodes": episodes, "split": config.split, "stage": config.stage,
+            "shield": config.shield, "success_rate": np.mean([r["is_success"] for r in records]).item(),
+            "collision_rate": np.mean([r["event"] == "collision" for r in records]).item(),
+            "cliff_rate": np.mean([r["event"] == "cliff" for r in records]).item(),
+            "timeout_rate": np.mean([r["event"] == "timeout" for r in records]).item(),
+            "intervention_fraction": sum(r["interventions"] for r in records)/sum(r["steps"] for r in records),
+            "mean_reward": float(np.mean([r["reward"] for r in records])), "records": records}
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--model", required=True)
+    p.add_argument("--episodes", type=int, default=30)
+    p.add_argument("--seed", type=int, default=20000)
+    p.add_argument("--split", choices=["validation", "test", "stress"], default="test")
+    p.add_argument("--stage", choices=["empty", "static", "mixed", "dynamic", "cliffs", "full"])
+    p.add_argument("--unshielded", action="store_true", help="Simulation-only policy ablation")
+    p.add_argument("--output", required=True)
+    args = p.parse_args()
+    from stable_baselines3 import PPO
+    import torch
+    torch.set_num_threads(1)
+    source = Path(args.model).resolve().parent
+    if source.name == "checkpoints":
+        source = source.parent
+    robot, config, _ = load_config(source/"config.json")
+    config = replace(config, split=args.split, shield=not args.unshielded,
+                     stage=args.stage or config.stage)
+    expected = json.loads((source/"contract.json").read_text())
+    if expected != json.loads(json.dumps(KennyEnv(robot, config).contract())):
+        p.error("Model and environment observation contracts differ")
+    model = PPO.load(args.model, device="cpu")
+    result = evaluate_model(model, robot, config, args.episodes, args.seed)
+    output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(result, indent=2))
+    print(json.dumps({k: v for k, v in result.items() if k != "records"}, indent=2))
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,4 @@
+{
+  "environment": {"stage": "empty", "max_steps": 60},
+  "training": {"n_envs": 1, "vector_backend": "dummy", "device": "cpu", "torch_threads": 1, "n_steps": 64, "batch_size": 64, "n_epochs": 1, "total_timesteps": 256, "eval_freq": 128, "eval_episodes": 2, "checkpoint_freq": 128}
+}

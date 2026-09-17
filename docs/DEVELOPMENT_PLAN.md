@@ -1,5 +1,7 @@
 # KENNY Development Plan
 
+For the detailed hardware-specific implementation sequence, PPO training design, ROS 2 Jazzy setup, ArUco localization, depth obstacle handling, and cliff avoidance, see [RL Training and Robot Setup Guide](RL_TRAINING_AND_ROBOT_GUIDE.md). That guide refines the high-level phases below: verify sensors, drive control, and localization before final simulation training.
+
 **Project Title**
 
 **KENNY: An Autonomous Indoor Waste Collection Robot Utilizing Reinforcement Learning, YOLOv8, and ArUco for Navigation and Detection**

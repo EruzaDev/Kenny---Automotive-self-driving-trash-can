@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kenny-rl"
+version = "0.1.0"
+description = "Lightweight height-aware navigation training for KENNY"
+requires-python = ">=3.10,<3.13"
+dependencies = ["numpy==1.26.4", "gymnasium==1.0.0"]
+
+[project.optional-dependencies]
+train = ["stable-baselines3==2.4.1", "torch>=2.3,<2.6", "tensorboard>=2.16,<3"]
+view = ["matplotlib==3.9.4"]
+test = ["pytest==8.3.5"]
+
+[project.scripts]
+kenny-train = "kenny_rl.train:main"
+kenny-evaluate = "kenny_rl.evaluate:main"
+kenny-demo = "kenny_rl.demo:main"
+kenny-benchmark = "kenny_rl.benchmark:main"
+
+[tool.setuptools.packages.find]
+include = ["kenny_rl*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

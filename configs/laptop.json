@@ -1,0 +1,30 @@
+{
+  "robot": {
+    "width": 0.23,
+    "length": 0.23,
+    "height": 0.485,
+    "track_width": 0.235,
+    "wheel_radius": 0.04,
+    "motor_rpm": 333.0
+  },
+  "environment": {
+    "stage": "empty",
+    "split": "train",
+    "world_size": 12.0,
+    "max_steps": 1200,
+    "history": 4
+  },
+  "training": {
+    "n_envs": 1,
+    "vector_backend": "dummy",
+    "device": "cpu",
+    "torch_threads": 1,
+    "n_steps": 512,
+    "batch_size": 128,
+    "n_epochs": 5,
+    "total_timesteps": 100000,
+    "eval_freq": 25000,
+    "eval_episodes": 5,
+    "checkpoint_freq": 25000
+  }
+}
