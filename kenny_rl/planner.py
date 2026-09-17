@@ -39,7 +39,16 @@ class GridPlanner:
     def observe(self, points, step, ttl=50):
         """Finite memory for movable objects; longer TTL supplied for floor drops."""
         for point in points:
-            cells = np.asarray(self.cell(point)) + self.offsets
+            cell = self.cell(point)
+            # A known wall is already footprint-inflated by set_walls(). Adding
+            # the same range return again would inflate it a second time and can
+            # incorrectly close valid doorways. Unknown obstacle endpoints land
+            # outside the static mask and still enter temporary memory.
+            lo = np.maximum(np.asarray(cell)-1, 0)
+            hi = np.minimum(np.asarray(cell)+2, self.n)
+            if self.static[lo[0]:hi[0], lo[1]:hi[1]].any():
+                continue
+            cells = np.asarray(cell) + self.offsets
             cells = cells[np.all((cells >= 0) & (cells < self.n), axis=1)]
             self.expires[cells[:, 0], cells[:, 1]] = np.maximum(
                 self.expires[cells[:, 0], cells[:, 1]], step + ttl)

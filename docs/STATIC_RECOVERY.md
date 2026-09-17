@@ -62,6 +62,23 @@ Wider routes can take longer even when they prevent deadlocks. Random sensor
 dropout remains a source of legitimate stops. Do not lower guard thresholds
 merely to improve these metrics. Reserve test scenarios for the chosen policy.
 
+## Duplicate mapped-wall observations
+
+The first 100-episode recovery evaluation exposed a planner defect: several
+missions spent all 1,200 steps stationary with `navigation_mode="blocked"`,
+zero interventions, and zero path length. World generation had verified a route
+using the known wall map, but reset then inserted noisy LiDAR/depth returns from
+those same walls into temporary obstacle memory with another layer of footprint
+inflation. Valid openings could therefore be closed after generation.
+
+Known-wall returns and immediately adjacent noisy endpoint cells are now ignored
+by temporary obstacle memory. The walls remain blocked by the static map;
+sensor-discovered obstacles away from mapped walls are still recorded. This does
+not relax the collision shield. On reported validation seeds 10101, 10133,
+10152, 10172 and 10194, `no_route_steps` fell to zero in route-follower replay.
+Four succeeded; 10133 retained a separate obstacle-stop timeout. Re-evaluate
+existing best checkpoints with the fixed source before deciding to retrain.
+
 The locally available checkpoint is an empty-trained v3 policy, not the user's
 continued-static server weights. The initial paired 10-episode validation check
 improved from 7/10 to 8/10 success and 57.5% to 45.3% interventions; both runs

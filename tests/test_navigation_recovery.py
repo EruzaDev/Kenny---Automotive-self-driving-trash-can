@@ -23,6 +23,27 @@ def test_clearance_cost_prefers_open_route_without_blocking_narrow_passages():
     assert len(planner.path(start, goal))  # soft cost must not seal narrow routes
 
 
+def test_observing_known_wall_does_not_double_inflate_it():
+    planner = GridPlanner(8, .25, .16)
+    planner.set_walls([[3., 0., 0., 3.2, 3., 1.]])
+    static = planner.static.copy()
+    planner.observe([[3., 2.]], step=0)
+    np.testing.assert_array_equal(planner.expires, 0)
+    np.testing.assert_array_equal(planner.static, static)
+    # Small range noise can place a return in the cell beside the mapped wall.
+    wall_cell = np.argwhere(planner.static)[0]
+    adjacent = np.minimum(wall_cell+[1, 0], planner.n-1)
+    planner.observe([planner.point(adjacent)], step=0)
+    np.testing.assert_array_equal(planner.expires, 0)
+
+
+def test_observing_unknown_obstacle_still_adds_temporary_memory():
+    planner = GridPlanner(8, .25, .16)
+    planner.set_walls([[3., 0., 0., 3.2, 3., 1.]])
+    planner.observe([[5., 5.]], step=7)
+    assert planner.expires[planner.cell([5., 5.])] == 57
+
+
 def test_clearance_configuration_validates_and_keeps_policy_contract():
     for weight in (-1, float("nan"), float("inf")):
         with pytest.raises(ValueError):
