@@ -4,7 +4,7 @@ import numpy as np
 
 
 class GridPlanner:
-    def __init__(self, size, resolution, radius, progressive=False):
+    def __init__(self, size, resolution, radius, progressive=False, clearance_weight=0.):
         self.size, self.resolution, self.radius = size, resolution, radius
         self.n = int(np.ceil(size / resolution))
         self.static = np.zeros((self.n, self.n), dtype=bool)
@@ -14,6 +14,8 @@ class GridPlanner:
         self.occupied = np.zeros((self.n, self.n), dtype=bool)
         self.exploration_target = None
         self.navigation_mode = "goal"
+        self.clearance_weight = clearance_weight
+
         k = int(np.ceil((radius + .06) / resolution))
         self.offsets = np.array([(x, y) for x in range(-k, k + 1)
                                  for y in range(-k, k + 1)
@@ -94,6 +96,7 @@ class GridPlanner:
             self.exploration_target = None
             return route
         blocked = self.blocked(step)
+        penalties = self.clearance_cost(blocked)
         unknown = ~self.known
         adjacent = np.zeros_like(unknown)
         adjacent[1:] |= unknown[:-1]
@@ -117,7 +120,7 @@ class GridPlanner:
             if cost > costs[current]:
                 continue
             for nxt, distance in self.neighbors(current, blocked):
-                candidate = cost + distance
+                candidate = cost + distance*(1+penalties[nxt])
                 if candidate < costs.get(nxt, np.inf):
                     costs[nxt], previous[nxt] = candidate, current
                     heapq.heappush(queue, (candidate, nxt))
@@ -149,6 +152,7 @@ class GridPlanner:
 
     def path(self, start, goal, step=0):
         blocked = self.blocked(step)
+        penalties = self.clearance_cost(blocked)
         a, b = self.cell(start), self.cell(goal)
         if blocked[b]:
             return np.empty((0, 2))
@@ -165,9 +169,29 @@ class GridPlanner:
                 # nearby cell center, potentially outside the arrival radius.
                 return np.vstack((route, np.asarray(goal)))
             for nxt, distance in self.neighbors(current, blocked):
-                cost = costs[current] + distance
+                cost = costs[current] + distance*(1+penalties[nxt])
                 if cost >= costs.get(nxt, np.inf):
                     continue
                 costs[nxt], previous[nxt] = cost, current
                 heapq.heappush(frontier, (cost + np.hypot(nxt[0] - b[0], nxt[1] - b[1]), nxt))
         return np.empty((0, 2))
+
+    def clearance_cost(self, blocked):
+        """Soft preference for room to turn/brake; narrow passages remain usable.
+
+        Uses only the current planner map, including unknown cells. Two grid
+        rings outside already inflated obstacles are penalized, not forbidden.
+        """
+        penalty = np.zeros_like(blocked, dtype=float)
+        if self.clearance_weight == 0:
+            return penalty
+        expanded = blocked.copy()
+        for scale in (1., .5):
+            padded = np.pad(expanded, 1, constant_values=True)
+            grown = np.zeros_like(blocked)
+            for x in range(3):
+                for y in range(3):
+                    grown |= padded[x:x+self.n, y:y+self.n]
+            penalty[grown & ~expanded] = scale*self.clearance_weight
+            expanded = grown
+        return penalty

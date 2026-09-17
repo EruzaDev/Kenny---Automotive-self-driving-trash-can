@@ -126,6 +126,9 @@ def main():
             result["timesteps"] = self.num_timesteps
             for key in ("success_rate", "collision_rate", "cliff_rate", "timeout_rate", "intervention_fraction"):
                 self.logger.record(f"validation/{key}", result[key])
+            self.logger.record("validation/no_route_fraction", result["no_route_fraction"])
+            for key, value in result["intervention_reason_fractions"].items():
+                self.logger.record(f"validation/guard_{key}", value)
             with (run/"validation.jsonl").open("a") as f:
                 f.write(json.dumps(result)+"\n")
             # A stationary policy is collision-free but useless. Select curriculum

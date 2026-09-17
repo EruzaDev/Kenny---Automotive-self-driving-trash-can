@@ -167,6 +167,10 @@ The sweep starts independent runs from scratch, or continues per-seed checkpoint
 
 ## What generalizes, and what still needs validation
 
+For static-stage policies with frequent shield stops, see
+[static recovery](docs/STATIC_RECOVERY.md): optional clearance-aware routing,
+per-cause intervention diagnostics, and a v3-compatible resume configuration.
+
 An optional [progressive mapping mode](docs/PROGRESSIVE_MAPPING.md) now trains
 with structural walls initially unknown. It provides sensor-based grid mapping,
 conventional frontier selection and replanning, plus a revised final-approach

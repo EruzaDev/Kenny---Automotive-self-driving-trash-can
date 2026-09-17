@@ -71,6 +71,7 @@ class EnvConfig:
     marker_dropout: float = 0.15
     history: int = 4
     map_mode: str = "known"
+    route_clearance_weight: float = 0.0
     # Provisional ranges; replace with measurements from empty/full-bin trials.
     motor_gain_range: tuple = (0.9, 1.1)
     slip_range: tuple = (0.94, 1.02)
@@ -82,6 +83,8 @@ class EnvConfig:
     def __post_init__(self):
         if self.map_mode not in ("known", "progressive"):
             raise ValueError("map_mode must be known or progressive")
+        if not math.isfinite(self.route_clearance_weight) or self.route_clearance_weight < 0:
+            raise ValueError("route_clearance_weight must be finite and nonnegative")
         if self.stage not in ("empty", "static", "mixed", "dynamic", "cliffs", "full"):
             raise ValueError("Unknown curriculum stage")
         if self.split not in ("train", "validation", "test", "stress"):

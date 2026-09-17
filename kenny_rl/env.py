@@ -77,6 +77,9 @@ class KennyEnv(gym.Env):
         self.requested = np.array([-1., 0.])
         self.executed = np.array([-1., 0.])
         self.steps = self.marker_age = self.interventions = 0
+        self.guard_reasons = ()
+        self.intervention_reasons = {}
+        self.no_route_steps = 0
         self.path_length = 0.
         self.clutter_changes = 0
         self.uncertainty = .02
@@ -90,7 +93,8 @@ class KennyEnv(gym.Env):
         self.commands = deque([np.array([-1., 0.]) for _ in range(self.delay)])
         self.dropout = self.config.dropout * (2 if self.config.split == "stress" else 1)
         self.planner = GridPlanner(self.world.size, self.config.grid_resolution, self.robot.radius,
-                                   progressive=self.config.map_mode == "progressive")
+                                   progressive=self.config.map_mode == "progressive",
+                                   clearance_weight=self.config.route_clearance_weight)
         if self.config.map_mode == "known":
             self.planner.set_walls(self.world.boxes[np.array(self.world.kinds) == "wall"])
         self.route = np.empty((0, 2))
@@ -201,6 +205,7 @@ class KennyEnv(gym.Env):
 
     def _guard(self, target):
         """Stop using sensor evidence only, never a simulator collision query."""
+        self.guard_reasons = ()
         if not self.config.shield:
             return target, False
         r, c = self.robot, self.config
@@ -209,19 +214,31 @@ class KennyEnv(gym.Env):
         braking = speed**2/(2*r.acceleration*min(c.acceleration_scale_range[0], 1.))
         margin = r.radius + .05 + braking + speed*(c.dt + 1/r.lidar_hz)
         moving = target[0] > 0 or abs(target[1]) > 0
-        hazards = np.any(self.down_hazard | ~self.down_valid) or self.uncertainty > .35
+        reasons = []
+        if np.any(self.down_hazard):
+            reasons.append("downward_hazard")
+        if not np.all(self.down_valid):
+            reasons.append("downward_invalid")
+        if self.uncertainty > .35:
+            reasons.append("localization_uncertain")
         # Sensor unknowns in the direction of travel cause a conservative stop.
         front = np.abs(self.lidar.angles) < np.deg2rad(40)
-        hazards |= not np.all(self.lidar.valid[front])
-        hazards |= np.count_nonzero(self.depth.valid) < len(self.depth.valid)*.8
-        hazards |= np.count_nonzero(self.floor.valid) < len(self.floor.valid)*.5
-        for scan in (self.lidar, self.depth):
+        if not np.all(self.lidar.valid[front]):
+            reasons.append("lidar_invalid")
+        if np.count_nonzero(self.depth.valid) < len(self.depth.valid)*.8:
+            reasons.append("depth_invalid")
+        if np.count_nonzero(self.floor.valid) < len(self.floor.valid)*.5:
+            reasons.append("floor_invalid")
+        for name, scan in (("lidar", self.lidar), ("depth", self.depth)):
             lateral = np.abs(scan.ranges*np.sin(scan.angles))
             ahead = scan.ranges*np.cos(scan.angles)
             collision = scan.hits & (lateral < r.radius+.05) & (ahead > 0) & (ahead < margin)
-            hazards |= bool(np.any(collision))
-        hazards |= bool(np.any(self.floor.hits & (self.floor.ranges < margin)))
-        if moving and hazards:
+            if np.any(collision):
+                reasons.append(name+"_obstacle")
+        if np.any(self.floor.hits & (self.floor.ranges < margin)):
+            reasons.append("floor_hazard")
+        if moving and reasons:
+            self.guard_reasons = tuple(reasons)
             return np.zeros(2), True
         return target, False
 
@@ -239,9 +256,12 @@ class KennyEnv(gym.Env):
         target = np.array([(delayed[0]+1)/2*r.max_speed, delayed[1]*r.max_turn_rate])
         if not len(self.route):
             target[:] = 0  # no blind recovery motion
+            self.no_route_steps += 1
         previously_intervened = self.intervened
         target, self.intervened = self._guard(target)
         self.interventions += int(self.intervened)
+        for reason in self.guard_reasons:
+            self.intervention_reasons[reason] = self.intervention_reasons.get(reason, 0)+1
         self.executed = np.array([2*target[0]/r.max_speed-1, target[1]/r.max_turn_rate])
         max_delta = np.array([r.acceleration*self.accel_scale, r.angular_acceleration])*c.dt
         # Wheel target saturation respects the actual motor/wheel maximum.
@@ -325,6 +345,8 @@ class KennyEnv(gym.Env):
     def _info(self, event):
         return {"event": event, "is_success": event == "success", "steps": self.steps,
                 "interventions": self.interventions, "path_length": self.path_length,
+                "intervention_reasons": dict(self.intervention_reasons),
+                "no_route_steps": self.no_route_steps,
                 "clutter_changes": self.clutter_changes,
                 "map_mode": self.config.map_mode,
                 "mapped_fraction": float(self.planner.known.mean()),
