@@ -38,7 +38,8 @@ def main():
     p.add_argument("--envs", type=int, help="CPU workers per run; default caps config by CPU allocation")
     p.add_argument("--cpu-budget", type=int, help="Total CPUs allocated to this launcher, including learners")
     p.add_argument("--resume-from", type=Path, help="Previous sweep directory containing seed_N runs")
-    p.add_argument("--resume-checkpoint", default="best.zip", choices=["best.zip", "final.zip", "interrupted.zip"])
+    p.add_argument("--resume-checkpoint", default="best.zip",
+                   choices=["best.zip", "best_guarded.zip", "final.zip", "interrupted.zip"])
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args()
     if len(set(args.seeds)) != len(args.seeds):

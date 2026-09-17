@@ -66,6 +66,11 @@ class EnvConfig:
     grid_resolution: float = 0.25
     domain_randomization: bool = True
     shield: bool = True
+    train_unshielded_fraction: float = 0.0
+    obstacle_command_penalty: float = 0.0
+    sensor_command_penalty: float = 0.0
+    intervention_penalty: float = 0.02
+    intervention_onset_penalty: float = 0.1
     sensor_noise: float = 0.015
     dropout: float = 0.015
     marker_dropout: float = 0.15
@@ -81,6 +86,12 @@ class EnvConfig:
     sensor_outage_steps: tuple = (2, 5)
 
     def __post_init__(self):
+        if not 0 <= self.train_unshielded_fraction <= 1:
+            raise ValueError("train_unshielded_fraction must be in [0, 1]")
+        for name in ("obstacle_command_penalty", "sensor_command_penalty",
+                     "intervention_penalty", "intervention_onset_penalty"):
+            if not math.isfinite(getattr(self, name)) or getattr(self, name) < 0:
+                raise ValueError(f"{name} must be finite and nonnegative")
         if self.map_mode not in ("known", "progressive"):
             raise ValueError("map_mode must be known or progressive")
         if not math.isfinite(self.route_clearance_weight) or self.route_clearance_weight < 0:

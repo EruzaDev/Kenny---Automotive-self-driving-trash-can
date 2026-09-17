@@ -50,6 +50,7 @@ def evaluate_model(model, robot, config, episodes, seed=20000, progress_every=0)
                 key: sum(r["intervention_reasons"].get(key, 0) for r in records)/total_steps
                 for key in reasons},
             "no_route_fraction": sum(r["no_route_steps"] for r in records)/total_steps,
+            "unsafe_command_fraction": sum(r["unsafe_command_steps"] for r in records)/total_steps,
             "mean_reward": float(np.mean([r["reward"] for r in records])), "records": records}
 
 

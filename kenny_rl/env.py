@@ -21,6 +21,7 @@ FEATURES = [("lidar_range", 72), ("lidar_valid", 72),
             ("localization_health", 3), ("sensor_age_and_guard", 3)]
 FRAME_SIZE = sum(n for _, n in FEATURES)
 SCHEMA_VERSION = "kenny-geometric-v3"
+OBSTACLE_REASONS = {"lidar_obstacle", "depth_obstacle", "floor_hazard", "downward_hazard"}
 
 
 class KennyEnv(gym.Env):
@@ -52,6 +53,15 @@ class KennyEnv(gym.Env):
             split_id = {"train": 0, "validation": 1, "test": 2, "stress": 3}[self.config.split]
             seed = int(np.random.SeedSequence([seed, split_id]).generate_state(1)[0])
         super().reset(seed=seed)
+        # Separate stream: changing the shield mixture must not change worlds
+        # or sensor draws for a given seed. Evaluation never samples the mixture.
+        if seed is not None or not hasattr(self, "shield_rng"):
+            self.shield_rng = np.random.default_rng(np.random.SeedSequence([seed or 0, 9173]))
+        self.shield_active = self.config.shield
+        if self.config.split == "train" and self.config.train_unshielded_fraction:
+            self.shield_active = self.config.shield and (
+                self.shield_rng.random() >= self.config.train_unshielded_fraction)
+        self.unsafe_command_steps = 0
         options = options or {}
         if set(options) - {"start", "goal", "heading"}:
             raise ValueError("Supported reset options: start, goal, heading")
@@ -206,8 +216,6 @@ class KennyEnv(gym.Env):
     def _guard(self, target):
         """Stop using sensor evidence only, never a simulator collision query."""
         self.guard_reasons = ()
-        if not self.config.shield:
-            return target, False
         r, c = self.robot, self.config
         speed = max(abs(self.velocity[0]), abs(target[0]))
         # Use a configured lower bound, never the hidden episode dynamics.
@@ -239,7 +247,8 @@ class KennyEnv(gym.Env):
             reasons.append("floor_hazard")
         if moving and reasons:
             self.guard_reasons = tuple(reasons)
-            return np.zeros(2), True
+            if self.shield_active:
+                return np.zeros(2), True
         return target, False
 
     def step(self, action):
@@ -260,8 +269,12 @@ class KennyEnv(gym.Env):
         previously_intervened = self.intervened
         target, self.intervened = self._guard(target)
         self.interventions += int(self.intervened)
-        for reason in self.guard_reasons:
-            self.intervention_reasons[reason] = self.intervention_reasons.get(reason, 0)+1
+        unsafe_command = bool(OBSTACLE_REASONS.intersection(self.guard_reasons))
+        sensor_command = bool(self.guard_reasons) and not unsafe_command
+        self.unsafe_command_steps += int(unsafe_command)
+        if self.intervened:
+            for reason in self.guard_reasons:
+                self.intervention_reasons[reason] = self.intervention_reasons.get(reason, 0)+1
         self.executed = np.array([2*target[0]/r.max_speed-1, target[1]/r.max_turn_rate])
         max_delta = np.array([r.acceleration*self.accel_scale, r.angular_acceleration])*c.dt
         # Wheel target saturation respects the actual motor/wheel maximum.
@@ -320,7 +333,13 @@ class KennyEnv(gym.Env):
             # obstacle avoidance and the safety guard may always stop the robot.
             desired = self.approach_speed(goal_distance)
             reward -= .02*abs(self.velocity[0]-desired)/r.max_speed
-        reward -= .02*int(self.intervened) + .1*int(self.intervened and not previously_intervened)
+        reward -= c.intervention_penalty*int(self.intervened)
+        reward -= c.intervention_onset_penalty*int(self.intervened and not previously_intervened)
+        # Same sensor-based unsafe-command cost with or without enforcement.
+        # Dropout-only requests get a separate, smaller cost; no simulator truth
+        # is consulted here. Collision/cliff terminal penalties remain intact.
+        reward -= c.obstacle_command_penalty*int(unsafe_command)
+        reward -= c.sensor_command_penalty*int(sensor_command)
         if event in ("collision", "cliff"):
             reward -= 50
         # Simulator truth checks success; it is never exposed as policy pose input.
@@ -345,6 +364,8 @@ class KennyEnv(gym.Env):
     def _info(self, event):
         return {"event": event, "is_success": event == "success", "steps": self.steps,
                 "interventions": self.interventions, "path_length": self.path_length,
+                "shield_active": self.shield_active,
+                "unsafe_command_steps": self.unsafe_command_steps,
                 "intervention_reasons": dict(self.intervention_reasons),
                 "no_route_steps": self.no_route_steps,
                 "clutter_changes": self.clutter_changes,

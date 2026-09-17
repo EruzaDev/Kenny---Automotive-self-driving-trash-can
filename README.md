@@ -167,6 +167,11 @@ The sweep starts independent runs from scratch, or continues per-seed checkpoint
 
 ## What generalizes, and what still needs validation
 
+For a policy with poor unshielded performance, the experimental
+[shield-dependence training profile](docs/SHIELD_TRAINING.md) mixes shielded and
+unshielded simulation episodes, separates obstacle and sensor penalties, and
+validates both modes. It preserves a separate best guarded checkpoint.
+
 For static-stage policies with frequent shield stops, see
 [static recovery](docs/STATIC_RECOVERY.md): optional clearance-aware routing,
 per-cause intervention diagnostics, and a v3-compatible resume configuration.

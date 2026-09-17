@@ -115,13 +115,15 @@ def main():
             super().__init__()
             self.last = 0
             self.best = None
+            self.best_guarded = None
         def _on_training_start(self):
             self.last = self.num_timesteps
             # Score the resumed or cloned policy before PPO can change it. This
             # also guarantees that every completed run has a best.zip.
             self._evaluate()
         def _evaluate(self):
-            result = evaluate_model(self.model, robot, replace(config, split="validation"),
+            result = evaluate_model(self.model, robot, replace(config, split="validation",
+                                    shield=True if training.get("dual_validation", False) else config.shield),
                                     training.get("eval_episodes", 5), seed=10000)
             result["timesteps"] = self.num_timesteps
             for key in ("success_rate", "collision_rate", "cliff_rate", "timeout_rate", "intervention_fraction"):
@@ -137,6 +139,25 @@ def main():
             score = (result["success_rate"],
                      -result["collision_rate"]-result["cliff_rate"],
                      -result["intervention_fraction"], result["mean_reward"])
+            if training.get("dual_validation", False):
+                if self.best_guarded is None or score > self.best_guarded:
+                    self.best_guarded = score
+                    self.model.save(run/"best_guarded")
+                raw = evaluate_model(self.model, robot,
+                                     replace(config, split="validation", shield=False),
+                                     training.get("eval_episodes", 5), seed=10000)
+                raw["timesteps"] = self.num_timesteps
+                with (run/"validation_unshielded.jsonl").open("a") as f:
+                    f.write(json.dumps(raw)+"\n")
+                for key in ("success_rate", "collision_rate", "timeout_rate", "unsafe_command_fraction"):
+                    self.logger.record(f"validation_unshielded/{key}", raw[key])
+                # Optimize the weaker mode, retaining a separate guarded best
+                # so an unshielded gain cannot silently erase its baseline.
+                score = (min(result["success_rate"], raw["success_rate"]),
+                         -result["collision_rate"]-result["cliff_rate"]-raw["collision_rate"]-raw["cliff_rate"],
+                         result["success_rate"]+raw["success_rate"],
+                         -raw["unsafe_command_fraction"])
+                print("Unshielded validation:", {k:v for k,v in raw.items() if k != "records"}, flush=True)
             if self.best is None or score > self.best:
                 self.best = score
                 self.model.save(run/"best")
