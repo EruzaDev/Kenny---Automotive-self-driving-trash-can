@@ -96,6 +96,18 @@ def main():
                     n_steps=n_steps, batch_size=batch, n_epochs=training.get("n_epochs", 5),
                     tensorboard_log=str(run/"tensorboard"),
                     policy_kwargs={"net_arch": {"pi": [128, 128], "vf": [128, 128]}}, verbose=1)
+        cloning_episodes = training.get("behavior_cloning_episodes", 0)
+        if cloning_episodes:
+            from .bootstrap import collect_demonstrations, clone_policy
+            observations, actions = collect_demonstrations(robot, config, cloning_episodes,
+                                                            args.seed*100000)
+            losses = clone_policy(model, observations, actions,
+                                  training.get("behavior_cloning_epochs", 10),
+                                  training.get("behavior_cloning_batch_size", 512),
+                                  training.get("behavior_cloning_learning_rate", 3e-4),
+                                  training.get("behavior_cloning_log_std", -1.), args.seed)
+            print(f"Behavior cloning: {len(observations)} samples, "
+                  f"loss {losses[0]:.6f} -> {losses[-1]:.6f}", flush=True)
     from .evaluate import evaluate_model
 
     class Validation(BaseCallback):
@@ -105,10 +117,10 @@ def main():
             self.best = None
         def _on_training_start(self):
             self.last = self.num_timesteps
-        def _on_step(self):
-            if self.num_timesteps-self.last < training.get("eval_freq", 25000):
-                return True
-            self.last = self.num_timesteps
+            # Score the resumed or cloned policy before PPO can change it. This
+            # also guarantees that every completed run has a best.zip.
+            self._evaluate()
+        def _evaluate(self):
             result = evaluate_model(self.model, robot, replace(config, split="validation"),
                                     training.get("eval_episodes", 5), seed=10000)
             result["timesteps"] = self.num_timesteps
@@ -116,13 +128,21 @@ def main():
                 self.logger.record(f"validation/{key}", result[key])
             with (run/"validation.jsonl").open("a") as f:
                 f.write(json.dumps(result)+"\n")
-            # Safety first, then success, then low intervention rate.
-            score = (-result["collision_rate"]-result["cliff_rate"], result["success_rate"],
-                     -result["intervention_fraction"])
+            # A stationary policy is collision-free but useless. Select curriculum
+            # checkpoints by success first, then observed safety and guard reliance;
+            # release qualification still requires zero observed contacts.
+            score = (result["success_rate"],
+                     -result["collision_rate"]-result["cliff_rate"],
+                     -result["intervention_fraction"], result["mean_reward"])
             if self.best is None or score > self.best:
                 self.best = score
                 self.model.save(run/"best")
             print("Validation:", result, flush=True)
+        def _on_step(self):
+            if self.num_timesteps-self.last < training.get("eval_freq", 25000):
+                return True
+            self.last = self.num_timesteps
+            self._evaluate()
             return True
     checkpoint = CheckpointCallback(save_freq=max(1, training.get("checkpoint_freq", 25000)//n_envs),
                                     save_path=str(run/"checkpoints"), name_prefix="ppo")

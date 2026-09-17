@@ -20,7 +20,7 @@ FEATURES = [("lidar_range", 72), ("lidar_valid", 72),
             ("previous_requested_action", 2), ("previous_executed_action", 2),
             ("localization_health", 3), ("sensor_age_and_guard", 3)]
 FRAME_SIZE = sum(n for _, n in FEATURES)
-SCHEMA_VERSION = "kenny-geometric-v2"
+SCHEMA_VERSION = "kenny-geometric-v3"
 
 
 class KennyEnv(gym.Env):
@@ -151,9 +151,20 @@ class KennyEnv(gym.Env):
     def _remaining(self):
         if not len(self.route):
             return None
-        index = np.argmin(np.linalg.norm(self.route-self.estimate[:2], axis=1))
-        return float(np.linalg.norm(self.route[index]-self.estimate[:2]) +
-                     np.linalg.norm(np.diff(self.route[index:], axis=0), axis=1).sum())
+        if len(self.route) == 1:
+            return float(np.linalg.norm(self.route[0]-self.estimate[:2]))
+        starts, segments = self.route[:-1], np.diff(self.route, axis=0)
+        lengths = np.linalg.norm(segments, axis=1)
+        valid = lengths > 1e-9
+        t = np.zeros(len(segments))
+        delta = self.estimate[:2]-starts
+        t[valid] = np.clip(np.sum(delta[valid]*segments[valid], axis=1) /
+                           np.square(lengths[valid]), 0., 1.)
+        projections = starts+t[:, None]*segments
+        cross_track = np.linalg.norm(projections-self.estimate[:2], axis=1)
+        suffix = np.concatenate((np.cumsum(lengths[::-1])[::-1][1:], [0.]))
+        candidates = cross_track+(1-t)*lengths+suffix
+        return float(np.min(candidates))
 
     def _local(self, points):
         d = np.asarray(points)-self.estimate[:2]
@@ -274,19 +285,28 @@ class KennyEnv(gym.Env):
             # Motion progress before landmark correction/replanning prevents reward jumps.
             progress = float(np.clip(self.previous_remaining-predicted_remaining, -.1, .1))
         self.previous_remaining = remaining
-        reward = 5*progress-.01-.05*float(np.square(self.requested-previous_action).sum())
+        # Exploratory action changes must remain cheaper than correctly directed
+        # progress, or standing still becomes PPO's easiest local optimum.
+        reward = 5*progress-.01-.002*float(np.square(self.requested-previous_action).sum())
+        goal_distance = float(np.linalg.norm(self.estimate[:2]-self.world.goal))
+        if goal_distance < .40:
+            proximity = np.clip((.40-goal_distance)/.15, 0., 1.)
+            motion = (abs(self.velocity[0])/r.max_speed +
+                      abs(self.velocity[1])/r.max_turn_rate)
+            reward += .10*proximity*(1.-motion)
         reward -= .02*int(self.intervened) + .1*int(self.intervened and not previously_intervened)
         if event in ("collision", "cliff"):
             reward -= 50
         # Simulator truth checks success; it is never exposed as policy pose input.
         elif (np.linalg.norm(self.pose[:2]-self.world.goal) < .25 and
-              np.linalg.norm(self.estimate[:2]-self.world.goal) < .25 and
+              goal_distance < .25 and
               abs(self.velocity[0]) < .05 and abs(self.velocity[1]) < .1):
             event, reward = "success", reward+20
         terminated = event != "running"
         truncated = not terminated and self.steps >= c.max_steps
         if truncated:
             event = "timeout"
+            reward -= 5
         self.finished = terminated or truncated
         self.history.append(self._frame())
         return self._observation(), float(reward), terminated, truncated, self._info(event)

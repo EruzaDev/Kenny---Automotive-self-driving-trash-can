@@ -135,9 +135,18 @@ python -m kenny_rl.train --config configs/server.json --envs 2 --run runs/server
 python -m kenny_rl.train --config configs/server.json --run runs/server-0 --resume runs/static-0/final.zip --stage full --steps 1000000
 ```
 
-Server defaults: up to 8 spawned simulation workers per GPU learner, 512 rollout steps per worker, 512-sample minibatches, 10 PPO epochs, and target KL 0.02. The sweep launcher defaults to four CUDA devices and four independent seeds, scales worker counts to CPU allocation, and checks CUDA before starting. Training is headless. See the [sim-to-real audit and server instructions](docs/SIM_TO_REAL_AUDIT.md) for disturbance settings, transfer gaps, installation and curriculum continuation.
+Server defaults: up to 8 spawned simulation workers per GPU learner, 512 rollout steps per worker, 512-sample minibatches, 2 conservative PPO epochs, and target KL 0.005. The sweep launcher defaults to four CUDA devices and four independent seeds, scales worker counts to CPU allocation, and checks CUDA before starting. Training is headless. See the [sim-to-real audit and server instructions](docs/SIM_TO_REAL_AUDIT.md) for disturbance settings, transfer gaps, installation and curriculum continuation.
 
 **Four A5000s do not automatically accelerate a single SB3 PPO learner.** This implementation can run four independent seeds/experiments, one per device. It does not implement synchronous multi-GPU PPO, and the geometric simulator remains CPU-based. Start with one server job; check the school's scheduler/resource rules before launching more.
+
+For a fresh server experiment, first learn basic goal reaching with
+`configs/server_bootstrap.json`. It uses empty geometry without dynamics or
+sensor disturbances and shorter episodes. Advance only after held-out validation
+shows that PPO can stop at the goal. Then resume into `configs/server.json` on
+the empty stage to add measured-motion surrogates, noise, dropout, delays and
+outage bursts. `best.zip` prioritizes successful navigation, then observed
+collision/cliff rate and intervention rate; release evaluation still requires
+zero observed contacts.
 
 For GPU experiments, install the matching CUDA build in a fresh server environment. The following is the official CUDA 12.4 wheel family for the pinned PyTorch version; first verify the server's NVIDIA driver supports it:
 
@@ -154,7 +163,7 @@ python scripts/server_sweep.py --output runs/a5000-sweep --stage empty --dry-run
 # When resources are allocated, repeat without --dry-run to execute.
 ```
 
-The sweep starts independent runs from scratch, or continues per-seed checkpoints with `--resume-from runs/previous-sweep`. Eight workers plus one learner per GPU needs 36 CPU slots; on 32 allocated slots the launcher selects seven workers/run. Use `--cpu-budget` to specify a scheduler allocation not reflected in CPU affinity, or `--envs` for an explicit worker count. Use `--devices cpu` for sequential CPU seed experiments. Model weights are portable between CPU and CUDA. Start fresh with the v2 contract: older v1 checkpoints are rejected because the guard behavior and recorded timing contract changed.
+The sweep starts independent runs from scratch, or continues per-seed checkpoints with `--resume-from runs/previous-sweep`. Eight workers plus one learner per GPU needs 36 CPU slots; on 32 allocated slots the launcher selects seven workers/run. Use `--cpu-budget` to specify a scheduler allocation not reflected in CPU affinity, or `--envs` for an explicit worker count. Use `--devices cpu` for sequential CPU seed experiments. Model weights are portable between CPU and CUDA. Start fresh with the v3 contract: older checkpoints are rejected because route progress, rewards and guard behavior changed.
 
 ## What generalizes, and what still needs validation
 

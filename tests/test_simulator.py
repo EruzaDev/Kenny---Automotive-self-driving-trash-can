@@ -279,3 +279,57 @@ def test_evaluation_reports_periodic_and_final_progress(capsys):
     assert "Evaluation 2/3" in output
     assert "Evaluation 3/3" in output
     assert result["episodes"] == 3
+
+
+def test_timeout_has_an_explicit_terminal_penalty():
+    env = KennyEnv(config=EnvConfig(stage="empty", max_steps=1,
+                                    domain_randomization=False, dropout=0.,
+                                    marker_dropout=0., sensor_noise=0.))
+    env.reset(seed=7)
+    _, reward, terminated, truncated, info = env.step([-1., 0.])
+    assert not terminated and truncated and info["event"] == "timeout"
+    assert reward < -5
+
+
+def test_correct_progress_outweighs_action_change_penalty():
+    env = KennyEnv(config=EnvConfig(stage="empty", max_steps=2,
+                                    domain_randomization=False, dropout=0.,
+                                    marker_dropout=0., sensor_noise=0.))
+    env.reset(seed=7, options={"heading": 0.})
+    env.route = np.array([env.pose[:2], env.pose[:2] + [.5, 0.]])
+    env.previous_remaining = env._remaining()
+    _, reward, _, _, _ = env.step([1., 0.])
+    assert reward > -.01
+
+
+def test_remaining_distance_is_continuous_between_route_vertices():
+    env = KennyEnv(config=EnvConfig(stage="empty", domain_randomization=False))
+    env.reset(seed=3)
+    env.route = np.array([[0., 0.], [1., 0.], [2., 0.]])
+    values = []
+    for x in np.linspace(.1, 1.9, 19):
+        env.estimate[:2] = [x, 0.]
+        values.append(env._remaining())
+    np.testing.assert_allclose(values, 2-np.linspace(.1, 1.9, 19))
+    assert np.all(np.diff(values) < 0)
+
+
+def test_arrival_shaping_prefers_stopping_near_goal():
+    config = EnvConfig(stage="empty", max_steps=3, domain_randomization=False,
+                       dropout=0., marker_dropout=0., sensor_noise=0.)
+    stopped = KennyEnv(config=config)
+    stopped.reset(seed=4)
+    stopped.world.goal = stopped.estimate[:2] + [.30, 0.]
+    stopped.route = np.array([stopped.estimate[:2], stopped.world.goal])
+    stopped.previous_remaining = stopped._remaining()
+    _, stop_reward, _, _, _ = stopped.step([-1., 0.])
+
+    moving = KennyEnv(config=config)
+    moving.reset(seed=4)
+    moving.world.goal = moving.estimate[:2] + [.30, 0.]
+    moving.route = np.array([moving.estimate[:2], moving.world.goal])
+    moving.previous_remaining = moving._remaining()
+    moving.velocity[:] = [.20, .30]
+    moving.measured_velocity[:] = moving.velocity
+    _, moving_reward, _, _, _ = moving.step([1., 1.])
+    assert stop_reward > moving_reward

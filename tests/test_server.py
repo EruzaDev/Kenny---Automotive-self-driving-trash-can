@@ -47,4 +47,28 @@ def test_server_config_rollout_and_disturbances():
     assert env.domain_randomization and env.shield
     assert env.sensor_outage_probability > 0
     assert train["n_envs"] * train["n_steps"] % train["batch_size"] == 0
-    assert train["target_kl"] == .02
+    assert train["target_kl"] == .005
+    assert train["learning_rate"] == 1e-5
+    assert train["clip_range"] == .05
+
+
+def test_bootstrap_removes_disturbances_but_preserves_contract():
+    from kenny_rl.config import load_config
+    from kenny_rl.env import KennyEnv
+    robot, bootstrap, train = load_config("configs/server_bootstrap.json")
+    _, robust, _ = load_config("configs/server.json")
+    assert not bootstrap.domain_randomization
+    assert bootstrap.sensor_noise == bootstrap.dropout == bootstrap.marker_dropout == 0
+    assert bootstrap.sensor_outage_probability == 0
+    assert train["total_timesteps"] == 250000
+    assert train["behavior_cloning_episodes"] == 200
+    assert KennyEnv(robot, bootstrap).contract() == KennyEnv(robot, robust).contract()
+
+
+def test_bootstrap_collects_only_successful_demonstrations():
+    from kenny_rl.bootstrap import collect_demonstrations
+    from kenny_rl.config import load_config
+    robot, config, _ = load_config("configs/server_bootstrap.json")
+    observations, actions = collect_demonstrations(robot, config, 2, seed=0)
+    assert len(observations) == len(actions) > 0
+    assert observations.shape[1] > actions.shape[1] == 2

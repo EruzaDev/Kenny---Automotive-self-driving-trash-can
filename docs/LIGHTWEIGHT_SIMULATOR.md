@@ -79,14 +79,21 @@ Per step:
 ```text
 5 × route progress in meters, clipped to [-0.1, 0.1]
 - 0.01 time cost
-- 0.05 × squared change in normalized requested action
+- 0.002 × squared change in normalized requested action
 - 0.02 while the guard intervenes
 - 0.10 when a new guard intervention begins
++ up to 0.10 near the goal for low linear/angular speed
 + 20 once for arrival
 - 50 on collision or cliff entry
+- 5 when the episode times out
 ```
 
-Progress is computed on the existing path from odometry motion before applying marker corrections or replanning; the reference is then reset. This prevents a pose correction or shorter replacement path from creating artificial reward. Intervention penalties are kept smaller than contact penalties so repeated noisy stop events do not make an early collision attractive.
+Progress is computed by projecting the estimated position onto segments of the existing path, then measuring continuous distance along the remaining polyline. It is measured before landmark correction or replanning and the reference is then reset. This prevents waypoint-midpoint discontinuities, pose corrections, or replacement paths from producing false reward. Intervention penalties are kept smaller than contact penalties so repeated noisy stop events do not make an early collision attractive. The action-change coefficient remains below the reward for a correctly directed movement step; a larger earlier value caused PPO to converge on standing still. Timeout carries a terminal penalty so that stationary behavior is explicitly worse.
+
+Within 0.40 m of the estimated goal, a bounded arrival term favors reducing
+linear and angular speed. It reaches its full scale inside the 0.25 m arrival
+radius. This teaches braking without rewarding stationary behavior elsewhere;
+actual success still requires both true and estimated proximity and low motion.
 
 Success requires both true and estimated position within 0.25 m of the goal and small linear/angular velocity. This is a simulation label; a real arrival checker must use measured pose/uncertainty and a destination marker. Goal success, collision and cliff entry terminate. The time limit truncates. Calling `step` on a finished episode or passing NaN actions raises an error.
 

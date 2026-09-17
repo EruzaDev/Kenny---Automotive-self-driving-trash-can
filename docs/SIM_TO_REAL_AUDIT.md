@@ -32,10 +32,22 @@ set noise/dropout/outage fields to zero for a noiseless diagnostic.
 
 The guard previously read the exact hidden acceleration factor of each episode.
 It now uses a configured worst-case bound instead. The contract is bumped to
-`kenny-geometric-v2` and records the control period and guard braking bound.
-Version-1 checkpoints are intentionally rejected by resume/evaluation: start new
-server runs to evaluate the changed guard consistently. Feature dimensions remain
-unchanged, but old success statistics do not qualify the new controller.
+`kenny-geometric-v3` and records the control period and guard braking bound.
+Version-1 and v2 checkpoints are intentionally rejected by resume/evaluation:
+start new server runs to evaluate the changed guard and reward consistently.
+Feature dimensions remain unchanged, but old success statistics do not qualify
+the new controller. V3 reduces the action-change penalty from 0.05 to 0.002 and
+penalizes timeout by 5; v2 converged on a stationary, zero-success policy across
+four seeds and 500 held-out episodes. V3 also projects position onto route
+segments for continuous distance-to-go; the previous nearest-vertex calculation
+incorrectly penalized correct travel through the first half of each route edge.
+A bounded near-goal term teaches the policy to reduce linear and angular speed;
+the old policy passed within the arrival radius but continued moving until timeout.
+The clean bootstrap collects successful demonstrations from the deterministic
+route follower and fits the initial PPO actor to its normalized actions. The
+follower uses estimated route lookahead and goal distance already represented in
+the policy input; it receives no simulator truth. PPO exploration and validation
+still determine whether the learned policy generalizes beyond that initialization.
 Invalid range samples now carry the fixed maximum-range placeholder with validity
 zero; previously they could retain a distance computed from hidden geometry even
 though marked invalid. Whole-sensor outages use the same convention. The physical
