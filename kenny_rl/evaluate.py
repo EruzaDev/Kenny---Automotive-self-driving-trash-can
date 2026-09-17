@@ -8,9 +8,11 @@ from .config import load_config
 from .env import KennyEnv
 
 
-def evaluate_model(model, robot, config, episodes, seed=20000):
+def evaluate_model(model, robot, config, episodes, seed=20000, progress_every=0):
     if episodes < 1:
         raise ValueError("episodes must be positive")
+    if progress_every < 0:
+        raise ValueError("progress_every must be nonnegative")
     env = KennyEnv(robot, config)
     records = []
     try:
@@ -24,6 +26,13 @@ def evaluate_model(model, robot, config, episodes, seed=20000):
                 reward_sum += reward
                 done = terminated or truncated
             records.append({**info, "seed": seed+i, "reward": reward_sum})
+            completed = i + 1
+            if progress_every and (completed % progress_every == 0 or completed == episodes):
+                events = {name: sum(r["event"] == name for r in records)
+                          for name in ("success", "collision", "cliff", "timeout")}
+                print(f"Evaluation {completed}/{episodes} | "
+                      f"success={events['success']} collision={events['collision']} "
+                      f"cliff={events['cliff']} timeout={events['timeout']}", flush=True)
     finally:
         env.close()
     return {"episodes": episodes, "split": config.split, "stage": config.stage,
@@ -43,6 +52,8 @@ def main():
     p.add_argument("--split", choices=["validation", "test", "stress"], default="test")
     p.add_argument("--stage", choices=["empty", "static", "mixed", "dynamic", "cliffs", "full"])
     p.add_argument("--unshielded", action="store_true", help="Simulation-only policy ablation")
+    p.add_argument("--progress-every", type=int, default=10,
+                   help="Print progress every N episodes; use 0 to disable")
     p.add_argument("--output", required=True)
     args = p.parse_args()
     from stable_baselines3 import PPO
@@ -58,7 +69,9 @@ def main():
     if expected != json.loads(json.dumps(KennyEnv(robot, config).contract())):
         p.error("Model and environment observation contracts differ")
     model = PPO.load(args.model, device="cpu")
-    result = evaluate_model(model, robot, config, args.episodes, args.seed)
+    if args.progress_every < 0:
+        p.error("--progress-every must be nonnegative")
+    result = evaluate_model(model, robot, config, args.episodes, args.seed, args.progress_every)
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2))

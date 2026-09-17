@@ -263,3 +263,19 @@ def test_configurable_disturbances_are_seeded_and_serializable():
 def test_invalid_disturbance_parameters_rejected(kwargs):
     with pytest.raises(ValueError):
         EnvConfig(**kwargs)
+
+
+def test_evaluation_reports_periodic_and_final_progress(capsys):
+    from kenny_rl.evaluate import evaluate_model
+
+    class StopModel:
+        def predict(self, observation, deterministic=True):
+            return np.array([-1., 0.]), None
+
+    result = evaluate_model(StopModel(), RobotConfig(),
+                            EnvConfig(stage="empty", split="test", max_steps=1),
+                            episodes=3, progress_every=2)
+    output = capsys.readouterr().out
+    assert "Evaluation 2/3" in output
+    assert "Evaluation 3/3" in output
+    assert result["episodes"] == 3
