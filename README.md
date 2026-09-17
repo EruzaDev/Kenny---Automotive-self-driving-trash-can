@@ -167,9 +167,15 @@ The sweep starts independent runs from scratch, or continues per-seed checkpoint
 
 ## What generalizes, and what still needs validation
 
+An optional [progressive mapping mode](docs/PROGRESSIVE_MAPPING.md) now trains
+with structural walls initially unknown. It provides sensor-based grid mapping,
+conventional frontier selection and replanning, plus a revised final-approach
+reward. Use `configs/server_progressive.json` to fine-tune v3 checkpoints. This
+is a simulation surrogate; real SLAM and landmark localization still need integration.
+
 The actor sees local range features, route-relative coordinates, estimated motion and localization health—not a fixed school map, marker ID sequence, hidden obstacles or perfect simulator pose. Global A* routing allows detours that temporarily increase straight-line goal distance. Moving people and relocated bags force fresh local responses and periodic replanning.
 
-However, this version assumes **a supplied structural wall map for the current site**, as would be obtained using SLAM before navigation. Unknown clutter and cliffs are revealed through sensor surrogates; this is not a complete exploration/SLAM implementation for a building with no map. New environments can supply new maps without changing the policy interface.
+The default `map_mode="known"` assumes a supplied structural wall map for the current site. The optional `progressive` mode reveals a grid from sensor observations and explores frontiers. Both assume a localized start and a goal in the same coordinate frame. Neither implements a complete hardware SLAM stack. Unknown clutter and cliffs are revealed through sensor surrogates.
 
 Important fidelity limits:
 

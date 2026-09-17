@@ -70,6 +70,7 @@ class EnvConfig:
     dropout: float = 0.015
     marker_dropout: float = 0.15
     history: int = 4
+    map_mode: str = "known"
     # Provisional ranges; replace with measurements from empty/full-bin trials.
     motor_gain_range: tuple = (0.9, 1.1)
     slip_range: tuple = (0.94, 1.02)
@@ -79,6 +80,8 @@ class EnvConfig:
     sensor_outage_steps: tuple = (2, 5)
 
     def __post_init__(self):
+        if self.map_mode not in ("known", "progressive"):
+            raise ValueError("map_mode must be known or progressive")
         if self.stage not in ("empty", "static", "mixed", "dynamic", "cliffs", "full"):
             raise ValueError("Unknown curriculum stage")
         if self.split not in ("train", "validation", "test", "stress"):

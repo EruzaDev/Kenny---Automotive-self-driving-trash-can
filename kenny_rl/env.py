@@ -89,8 +89,10 @@ class KennyEnv(gym.Env):
         self.outages = {"lidar": 0, "depth": 0}
         self.commands = deque([np.array([-1., 0.]) for _ in range(self.delay)])
         self.dropout = self.config.dropout * (2 if self.config.split == "stress" else 1)
-        self.planner = GridPlanner(self.world.size, self.config.grid_resolution, self.robot.radius)
-        self.planner.set_walls(self.world.boxes[np.array(self.world.kinds) == "wall"])
+        self.planner = GridPlanner(self.world.size, self.config.grid_resolution, self.robot.radius,
+                                   progressive=self.config.map_mode == "progressive")
+        if self.config.map_mode == "known":
+            self.planner.set_walls(self.world.boxes[np.array(self.world.kinds) == "wall"])
         self.route = np.empty((0, 2))
         self.last_lidar_step = -100
         self._sense(force=True)
@@ -138,6 +140,8 @@ class KennyEnv(gym.Env):
         for scan, acquisition in ((self.lidar, self.lidar_estimate), (self.depth, self.estimate)):
             if scan is self.lidar and not (force or self.steps == self.last_lidar_step):
                 continue
+            if scan is self.lidar:
+                self.planner.observe_scan(acquisition[:2], acquisition[2], scan)
             angle = scan.angles[scan.hits]+acquisition[2]
             points = acquisition[:2] + scan.ranges[scan.hits, None]*np.column_stack((np.cos(angle), np.sin(angle)))
             self.planner.observe(points, self.steps)
@@ -146,7 +150,7 @@ class KennyEnv(gym.Env):
         self.planner.observe(points, self.steps, ttl=10000)
 
     def _replan(self):
-        self.route = self.planner.path(self.estimate[:2], self.world.goal, self.steps)
+        self.route = self.planner.navigation_path(self.estimate[:2], self.world.goal, self.steps)
 
     def _remaining(self):
         if not len(self.route):
@@ -290,10 +294,12 @@ class KennyEnv(gym.Env):
         reward = 5*progress-.01-.002*float(np.square(self.requested-previous_action).sum())
         goal_distance = float(np.linalg.norm(self.estimate[:2]-self.world.goal))
         if goal_distance < .40:
-            proximity = np.clip((.40-goal_distance)/.15, 0., 1.)
-            motion = (abs(self.velocity[0])/r.max_speed +
-                      abs(self.velocity[1])/r.max_turn_rate)
-            reward += .10*proximity*(1.-motion)
+            # No recurring positive reward for lingering near the destination.
+            # Approach at a useful walking-creep speed, then brake inside the
+            # arrival region. This is shaping, never a minimum-speed command:
+            # obstacle avoidance and the safety guard may always stop the robot.
+            desired = self.approach_speed(goal_distance)
+            reward -= .02*abs(self.velocity[0]-desired)/r.max_speed
         reward -= .02*int(self.intervened) + .1*int(self.intervened and not previously_intervened)
         if event in ("collision", "cliff"):
             reward -= 50
@@ -311,10 +317,18 @@ class KennyEnv(gym.Env):
         self.history.append(self._frame())
         return self._observation(), float(reward), terminated, truncated, self._info(event)
 
+    def approach_speed(self, distance):
+        braking = self.robot.acceleration*min(self.config.acceleration_scale_range[0], 1.)
+        return float(min(self.robot.max_speed,
+                         np.sqrt(2*braking*max(0., distance-.20))))
+
     def _info(self, event):
         return {"event": event, "is_success": event == "success", "steps": self.steps,
                 "interventions": self.interventions, "path_length": self.path_length,
                 "clutter_changes": self.clutter_changes,
+                "map_mode": self.config.map_mode,
+                "mapped_fraction": float(self.planner.known.mean()),
+                "navigation_mode": self.planner.navigation_mode,
                 "localization_error": float(np.linalg.norm(self.pose[:2]-self.estimate[:2])),
                 "route_available": bool(len(self.route)), "stage": self.config.stage,
                 "split": self.config.split}

@@ -36,6 +36,8 @@ def evaluate_model(model, robot, config, episodes, seed=20000, progress_every=0)
     finally:
         env.close()
     return {"episodes": episodes, "split": config.split, "stage": config.stage,
+            "map_mode": config.map_mode,
+            "mean_steps": float(np.mean([r["steps"] for r in records])),
             "shield": config.shield, "success_rate": np.mean([r["is_success"] for r in records]).item(),
             "collision_rate": np.mean([r["event"] == "collision" for r in records]).item(),
             "cliff_rate": np.mean([r["event"] == "cliff" for r in records]).item(),
@@ -52,6 +54,7 @@ def main():
     p.add_argument("--split", choices=["validation", "test", "stress"], default="test")
     p.add_argument("--stage", choices=["empty", "static", "mixed", "dynamic", "cliffs", "full"])
     p.add_argument("--unshielded", action="store_true", help="Simulation-only policy ablation")
+    p.add_argument("--map-mode", choices=["known", "progressive"])
     p.add_argument("--progress-every", type=int, default=10,
                    help="Print progress every N episodes; use 0 to disable")
     p.add_argument("--output", required=True)
@@ -64,7 +67,7 @@ def main():
         source = source.parent
     robot, config, _ = load_config(source/"config.json")
     config = replace(config, split=args.split, shield=not args.unshielded,
-                     stage=args.stage or config.stage)
+                     stage=args.stage or config.stage, map_mode=args.map_mode or config.map_mode)
     expected = json.loads((source/"contract.json").read_text())
     if expected != json.loads(json.dumps(KennyEnv(robot, config).contract())):
         p.error("Model and environment observation contracts differ")

@@ -28,6 +28,12 @@ The initial robot pose is initialized from a surveyed start. Wheel odometry foll
 
 Structural walls form the supplied global map. The planner receives additional obstacle endpoints projected using estimated pose. It has no access to hidden bag/overhang/person positions or hidden cliffs. Temporary obstacle memory lasts 5 seconds; observed floor drops have longer retention. The planner updates every second. If it cannot find a path, the controller stops and keeps trying to replan.
 
+That describes the default `known` map mode. Optional `progressive` mode starts
+without the structural map, reveals free/occupied cells from valid LiDAR rays,
+and selects reachable frontiers when the goal has no observed route. Observed
+LiDAR occupancy persists until cleared by free-ray evidence. See
+[progressive mapping](PROGRESSIVE_MAPPING.md) for assumptions and fine-tuning.
+
 ## Observation schema v2
 
 Each frame has **269 float32 features**; four consecutive frames produce **1,076 features**. Reset repeats the initial observation across history, so zero padding cannot be mistaken for zero-distance obstacles.
@@ -90,10 +96,11 @@ Per step:
 
 Progress is computed by projecting the estimated position onto segments of the existing path, then measuring continuous distance along the remaining polyline. It is measured before landmark correction or replanning and the reference is then reset. This prevents waypoint-midpoint discontinuities, pose corrections, or replacement paths from producing false reward. Intervention penalties are kept smaller than contact penalties so repeated noisy stop events do not make an early collision attractive. The action-change coefficient remains below the reward for a correctly directed movement step; a larger earlier value caused PPO to converge on standing still. Timeout carries a terminal penalty so that stationary behavior is explicitly worse.
 
-Within 0.40 m of the estimated goal, a bounded arrival term favors reducing
-linear and angular speed. It reaches its full scale inside the 0.25 m arrival
-radius. This teaches braking without rewarding stationary behavior elsewhere;
-actual success still requires both true and estimated proximity and low motion.
+Within 0.40 m of the estimated goal, a small nonpositive penalty measures speed
+error against a braking profile that reaches zero at 0.20 m. It replaces the
+former positive slow-motion bonus, which could reward lingering outside arrival
+tolerance. The final route point is the exact goal. Actual success still requires
+both true and estimated proximity and low linear/angular motion.
 
 Success requires both true and estimated position within 0.25 m of the goal and small linear/angular velocity. This is a simulation label; a real arrival checker must use measured pose/uncertainty and a destination marker. Goal success, collision and cliff entry terminate. The time limit truncates. Calling `step` on a finished episode or passing NaN actions raises an error.
 

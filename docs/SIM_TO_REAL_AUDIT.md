@@ -41,8 +41,11 @@ penalizes timeout by 5; v2 converged on a stationary, zero-success policy across
 four seeds and 500 held-out episodes. V3 also projects position onto route
 segments for continuous distance-to-go; the previous nearest-vertex calculation
 incorrectly penalized correct travel through the first half of each route edge.
-A bounded near-goal term teaches the policy to reduce linear and angular speed;
-the old policy passed within the arrival radius but continued moving until timeout.
+The final-approach term now penalizes deviation from a distance-based braking
+speed, replacing the recurring positive slow-motion bonus that could reward
+lingering. Success still requires low linear and angular speed. Routes terminate
+at the exact goal rather than a cell center. These changes require re-evaluation;
+they preserve the v3 policy input/output contract for fine-tuning.
 The clean bootstrap collects successful demonstrations from the deterministic
 route follower and fits the initial PPO actor to its normalized actions. The
 follower uses estimated route lookahead and goal distance already represented in
@@ -64,7 +67,9 @@ validity zero means unknown, never observed free space.
   Sparse forward depth rays and point downward sensors cannot establish cliff safety.
 - The circular footprint is conservative for the supplied body, but lateral/rear
   coverage, rotating near an edge, protrusions and the caster need hardware checks.
-- The supplied structural wall map is assumed correct. Mapping errors, unsurveyed
+- Default known-map mode assumes a correct structural map. Optional progressive
+  mode adds sensor-based mapping and frontier routing, not real scan matching or
+  loop closure. See [progressive mapping](PROGRESSIVE_MAPPING.md). Mapping errors, unsurveyed
   starts, wrong markers and localization jumps need explicit tests.
 - Depth age is synchronous in simulation. Delayed/frozen-but-plausible frames,
   timestamp/TF faults, camera extrinsic errors, glass, dark/reflective floors,

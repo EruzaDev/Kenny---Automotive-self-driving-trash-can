@@ -314,7 +314,7 @@ def test_remaining_distance_is_continuous_between_route_vertices():
     assert np.all(np.diff(values) < 0)
 
 
-def test_arrival_shaping_prefers_stopping_near_goal():
+def test_arrival_shaping_prefers_progress_outside_arrival_radius():
     config = EnvConfig(stage="empty", max_steps=3, domain_randomization=False,
                        dropout=0., marker_dropout=0., sensor_noise=0.)
     stopped = KennyEnv(config=config)
@@ -332,4 +332,4 @@ def test_arrival_shaping_prefers_stopping_near_goal():
     moving.velocity[:] = [.20, .30]
     moving.measured_velocity[:] = moving.velocity
     _, moving_reward, _, _, _ = moving.step([1., 1.])
-    assert stop_reward > moving_reward
+    assert moving_reward > stop_reward

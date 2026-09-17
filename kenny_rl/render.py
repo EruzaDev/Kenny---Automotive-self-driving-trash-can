@@ -9,6 +9,12 @@ def render(env):
         env.figure, env.axes = plt.subplots(figsize=(7, 7))
     ax = env.axes
     ax.clear()
+    if env.config.map_mode == "progressive":
+        # Gray is unseen space. Underlying geometry is simulator debug truth,
+        # never input to mapping or the policy.
+        unknown = np.ma.masked_where(env.planner.known.T, np.ones_like(env.planner.known.T))
+        ax.imshow(unknown, origin="lower", extent=(0, env.world.size, 0, env.world.size),
+                  cmap="Greys", vmin=0, vmax=1, alpha=.25, zorder=3)
     colors = {"wall": "#657786", "bag": "#bc7b40", "overhang": "#a970d6",
               "chair_seat": "#39a7a0", "chair_leg": "#195652", "chair_back": "#26877f"}
     for box, kind in zip(env.world.boxes, env.world.kinds):
@@ -27,7 +33,7 @@ def render(env):
     ax.plot(*env.estimate[:2], "r+", label="estimated position")
     ax.plot(*env.world.goal, "g*", markersize=16, label="goal")
     ax.set(xlim=(0, env.world.size), ylim=(0, env.world.size), aspect="equal", xlabel="x (m)", ylabel="y (m)",
-           title=f"KENNY | {env.config.stage} / {env.config.split} | step {env.steps} | stops {env.interventions}")
+           title=f"KENNY | {env.config.stage} / {env.config.map_mode} / {env.planner.navigation_mode} | step {env.steps} | stops {env.interventions}")
     ax.legend(loc="upper right", fontsize=7)
     env.figure.canvas.draw()
     if env.render_mode == "human":
