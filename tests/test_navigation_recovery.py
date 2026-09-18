@@ -106,6 +106,32 @@ def test_mixed_fine_grid_profile_preserves_policy_contract():
     assert KennyEnv(robot, baseline).contract() == KennyEnv(fine_robot, fine).contract()
 
 
+def test_route_lookahead_is_independent_of_grid_resolution():
+    env = KennyEnv(config=EnvConfig(stage="empty"))
+    env.estimate = np.array([.1, 0., 0.])
+
+    env.route = np.column_stack((np.arange(0., 3.01, .25), np.zeros(13)))
+    coarse, coarse_valid = env._lookahead()
+    env.route = np.column_stack((np.arange(0., 3.01, .125), np.zeros(25)))
+    fine, fine_valid = env._lookahead()
+
+    np.testing.assert_allclose(coarse, [[.5, 0.], [1., 0.], [2., 0.]])
+    np.testing.assert_allclose(fine, coarse)
+    np.testing.assert_array_equal(coarse_valid, np.ones(3))
+    np.testing.assert_array_equal(fine_valid, np.ones(3))
+
+
+def test_route_lookahead_interpolates_and_clamps_to_goal():
+    env = KennyEnv(config=EnvConfig(stage="empty"))
+    env.estimate = np.array([0., 0., 0.])
+    env.route = np.array([[0., 0.], [.3, 0.], [.3, .4], [.3, .6]])
+
+    points, valid = env._lookahead()
+
+    np.testing.assert_allclose(points, [[.3, .2], [.3, .6], [.3, .6]])
+    np.testing.assert_array_equal(valid, np.ones(3))
+
+
 def clear_sensors(env):
     env.uncertainty = .02
     env.down_hazard[:] = False

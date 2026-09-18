@@ -119,3 +119,10 @@ The report records `grid_resolution` explicitly.  Do not compare it with an
 older report without checking that field.  If frozen validation is safe but
 requires policy adaptation, resume into a new run with the fine-grid profile;
 never edit a completed run's serialized configuration in place.
+
+The policy route lookahead is sampled at fixed physical arc lengths of 0.5 m,
+1.0 m, and 2.0 m.  It is interpolated along the route from the robot's closest
+route projection.  This preserves the observation meaning across planner grid
+resolutions; the previous fixed waypoint offsets `[2, 4, 8]` accidentally
+halved the lookahead horizon on the 0.125 m grid.  Re-evaluate the frozen
+checkpoint with this correction before fine-tuning it.

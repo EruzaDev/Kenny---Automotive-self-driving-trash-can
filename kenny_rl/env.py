@@ -24,6 +24,7 @@ SCHEMA_VERSION = "kenny-geometric-v3"
 OBSTACLE_REASONS = {"lidar_obstacle", "depth_obstacle", "floor_hazard", "downward_hazard"}
 FULL_STOP_REASONS = {"downward_hazard", "downward_invalid", "floor_hazard", "floor_invalid"}
 ARRIVAL_RADIUS = .25
+ROUTE_LOOKAHEAD_DISTANCES = np.array([.5, 1., 2.])
 
 
 class KennyEnv(gym.Env):
@@ -195,9 +196,44 @@ class KennyEnv(gym.Env):
     def _lookahead(self):
         if not len(self.route):
             return np.zeros((3, 2)), np.zeros(3)
-        index = np.argmin(np.linalg.norm(self.route-self.estimate[:2], axis=1))
-        indices = np.minimum(index + np.array([2, 4, 8]), len(self.route)-1)
-        return self._local(self.route[indices]), np.ones(3)
+        if len(self.route) == 1:
+            points = np.repeat(self.route, len(ROUTE_LOOKAHEAD_DISTANCES), axis=0)
+            return self._local(points), np.ones(3)
+
+        # Begin at the closest projection onto the route, then sample by
+        # physical arc length.  Fixed waypoint indices change meaning when the
+        # planner grid resolution changes (for example, 8 cells are 2 m on a
+        # 0.25 m grid but only 1 m on a 0.125 m grid).
+        starts = self.route[:-1]
+        segments = np.diff(self.route, axis=0)
+        lengths = np.linalg.norm(segments, axis=1)
+        valid = lengths > 1e-9
+        t = np.zeros(len(segments))
+        delta = self.estimate[:2]-starts
+        t[valid] = np.clip(np.sum(delta[valid]*segments[valid], axis=1) /
+                           np.square(lengths[valid]), 0., 1.)
+        projections = starts+t[:, None]*segments
+        segment_index = int(np.argmin(np.linalg.norm(
+            projections-self.estimate[:2], axis=1)))
+        forward = np.vstack((projections[segment_index],
+                             self.route[segment_index+1:]))
+
+        forward_lengths = np.linalg.norm(np.diff(forward, axis=0), axis=1)
+        cumulative = np.concatenate(([0.], np.cumsum(forward_lengths)))
+        points = []
+        for distance in ROUTE_LOOKAHEAD_DISTANCES:
+            distance = min(distance, cumulative[-1])
+            if distance >= cumulative[-1]-1e-9:
+                points.append(forward[-1])
+                continue
+            index = int(np.searchsorted(cumulative, distance, side="right")-1)
+            segment_length = forward_lengths[index]
+            if segment_length <= 1e-9:
+                points.append(forward[index+1])
+                continue
+            fraction = (distance-cumulative[index])/segment_length
+            points.append(forward[index]+fraction*(forward[index+1]-forward[index]))
+        return self._local(np.asarray(points)), np.ones(3)
 
     def _frame(self):
         r = self.robot
