@@ -165,6 +165,55 @@ def test_clutter_changes_do_not_spawn_on_robot_or_goal():
     assert not circle_boxes(env.world.goal, env.robot.radius, env.world.boxes, env.robot.height)
 
 
+def test_cooperative_people_avoid_robot_but_stress_people_remain_adversarial():
+    cooperative = scene()
+    cooperative.people = np.array([[1., 1., 1., 0., .23]])
+    adversarial = scene()
+    adversarial.people = cooperative.people.copy()
+    robot_position = np.array([1.4, 1.])
+
+    cooperative.move_people(.1, np.random.default_rng(0), robot_position, .16,
+                            cooperative=True)
+    adversarial.move_people(.1, np.random.default_rng(0), robot_position, .16,
+                            cooperative=False)
+
+    assert cooperative.people[0, 0] < 1.
+    assert adversarial.people[0, 0] > 1.
+
+
+def test_collision_info_identifies_object_and_contact_motion():
+    env = KennyEnv(config=EnvConfig(stage="empty", shield=False,
+                                    domain_randomization=False, dropout=0.,
+                                    marker_dropout=0., sensor_noise=0.))
+    env.reset(seed=2, options={"start": [1., 1.], "goal": [3., 1.], "heading": 0.})
+    env.world.boxes = np.array([[1.15, .8, .3, 1.5, 1.2, .44]])
+    env.world.kinds = ["overhang"]
+
+    _, _, terminated, _, info = env.step([1., 0.])
+
+    assert terminated and info["event"] == "collision"
+    assert info["collision_source"] == "overhang"
+    assert info["collision_linear_speed"] > 0
+    assert info["collision_angular_speed"] == 0
+    assert not info["shield_stopped_at_contact"]
+
+
+def test_stationary_person_contact_is_reported_separately():
+    env = KennyEnv(config=EnvConfig(stage="dynamic", split="stress", shield=False,
+                                    domain_randomization=False, dropout=0.,
+                                    marker_dropout=0., sensor_noise=0.))
+    env.reset(seed=2)
+    env.world.boxes = np.empty((0, 6))
+    env.world.kinds = []
+    env.world.people = np.array([[*env.pose[:2], 0., 0., .23]])
+
+    _, _, terminated, _, info = env.step([-1., 0.])
+
+    assert terminated and info["collision_source"] == "person"
+    assert info["collision_linear_speed"] == 0
+    assert not info["shield_stopped_at_contact"]
+
+
 def test_stress_layout_has_reachable_initial_mission():
     env = KennyEnv(config=EnvConfig(stage="full", split="stress"))
     obs, _ = env.reset(seed=40)
@@ -280,6 +329,9 @@ def test_evaluation_reports_periodic_and_final_progress(capsys):
     assert "Evaluation 3/3" in output
     assert result["episodes"] == 3
     assert result["grid_resolution"] == .25
+    assert result["person_collision_rate"] == 0
+    assert result["stationary_person_contact_rate"] == 0
+    assert result["robot_motion_collision_rate"] == 0
 
 
 def test_timeout_has_an_explicit_terminal_penalty():

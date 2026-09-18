@@ -141,3 +141,14 @@ the intended direction before the robot advances.  Depth hits also receive a
 These controls reduce risk but cannot make an unobserved obstacle observable.
 Physical deployment still requires a bumper/emergency stop and conservative
 commissioning speeds.  They must not be described as a collision guarantee.
+
+## Dynamic-contact accounting
+
+Ordinary train, validation and test pedestrians now maintain clearance from
+the robot instead of walking directly into a stopped platform.  The stress
+split deliberately retains non-cooperative pedestrian motion.  Dynamic and
+full stages add a worst-case 0.8 m/s pedestrian closing-distance allowance to
+the sensor guard.  Evaluation records the collision source, linear/angular
+contact speed, whether the shield commanded a stop, and separate person,
+stationary-person and robot-motion collision rates.  Total collision rate is
+retained for backward-compatible reporting.

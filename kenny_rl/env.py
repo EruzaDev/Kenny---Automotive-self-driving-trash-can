@@ -28,6 +28,7 @@ ROUTE_LOOKAHEAD_DISTANCES = np.array([.5, 1., 2.])
 PLANAR_OBSTACLE_BUFFER = .05
 DEPTH_OBSTACLE_BUFFER = .15
 TRANSLATION_TURN_RATE_LIMIT = .55
+MAX_PEDESTRIAN_SPEED = .8
 
 
 class KennyEnv(gym.Env):
@@ -98,6 +99,10 @@ class KennyEnv(gym.Env):
         self.no_route_steps = 0
         self.path_length = 0.
         self.clutter_changes = 0
+        self.collision_source = None
+        self.collision_linear_speed = 0.
+        self.collision_angular_speed = 0.
+        self.shield_stopped_at_contact = False
         self.uncertainty = .02
         self.intervened = False
         randomize = self.config.domain_randomization
@@ -268,6 +273,12 @@ class KennyEnv(gym.Env):
         # above or below the LiDAR plane.  Preserve extra distance for its
         # limited field of view, minimum range and noisy edge returns.
         depth_margin = base_margin + DEPTH_OBSTACLE_BUFFER
+        if c.stage in ("dynamic", "full"):
+            # The scan contains no object identity or velocity estimate.  Use
+            # the world's configured pedestrian speed ceiling only as a
+            # conservative closing-distance allowance, never simulator pose.
+            planar_margin += MAX_PEDESTRIAN_SPEED*(c.dt + 1/r.lidar_hz)
+            depth_margin += MAX_PEDESTRIAN_SPEED*(2*c.dt)
         moving = target[0] > 0 or abs(target[1]) > 0
         reasons = []
         if np.any(self.down_hazard):
@@ -316,6 +327,15 @@ class KennyEnv(gym.Env):
                 return np.zeros(2), True
         return target, False
 
+    def _collision_source(self):
+        for kind, box in zip(self.world.kinds, self.world.boxes):
+            if circle_boxes(self.pose[:2], self.robot.radius, box[None], self.robot.height):
+                return kind
+        for box in self.world.people_boxes():
+            if circle_boxes(self.pose[:2], self.robot.radius, box[None], self.robot.height):
+                return "person"
+        return None
+
     def step(self, action):
         if self.finished:
             raise RuntimeError("Call reset() before stepping a finished episode")
@@ -355,10 +375,18 @@ class KennyEnv(gym.Env):
         substeps = max(5, int(np.ceil(abs(self.velocity[0])*c.dt/.02)))
         for _ in range(substeps):
             dt = c.dt/substeps
-            self.world.move_people(dt, self.np_random)
+            self.world.move_people(
+                dt, self.np_random, self.pose[:2], r.radius,
+                cooperative=self.config.split != "stress")
             self.pose[2] = wrap_angle(self.pose[2]+self.velocity[1]*self.slip[1]*dt)
             self.pose[:2] += self.velocity[0]*self.slip[0]*dt*np.array([np.cos(self.pose[2]), np.sin(self.pose[2])])
-            if circle_boxes(self.pose[:2], r.radius, self.world.all_boxes(), r.height):
+            source = self._collision_source()
+            if source is not None:
+                self.collision_source = source
+                self.collision_linear_speed = float(abs(self.velocity[0]))
+                self.collision_angular_speed = float(abs(self.velocity[1]))
+                self.shield_stopped_at_contact = bool(
+                    self.shield_active and self.intervened and target[0] == 0.)
                 event = "collision"; break
             if circle_rects(self.pose[:2], r.radius, self.world.cliffs):
                 event = "cliff"; break
@@ -431,6 +459,10 @@ class KennyEnv(gym.Env):
                 "interventions": self.interventions, "path_length": self.path_length,
                 "shield_active": self.shield_active,
                 "unsafe_command_steps": self.unsafe_command_steps,
+                "collision_source": self.collision_source,
+                "collision_linear_speed": self.collision_linear_speed,
+                "collision_angular_speed": self.collision_angular_speed,
+                "shield_stopped_at_contact": self.shield_stopped_at_contact,
                 "intervention_reasons": dict(self.intervention_reasons),
                 "no_route_steps": self.no_route_steps,
                 "clutter_changes": self.clutter_changes,

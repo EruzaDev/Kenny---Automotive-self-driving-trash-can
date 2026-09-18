@@ -16,13 +16,17 @@ class World:
     start: np.ndarray
     goal: np.ndarray
 
+    def people_boxes(self):
+        if not len(self.people):
+            return np.empty((0, 6))
+        p = self.people
+        return np.column_stack((p[:, 0]-p[:, 4], p[:, 1]-p[:, 4], np.zeros(len(p)),
+                                p[:, 0]+p[:, 4], p[:, 1]+p[:, 4], np.full(len(p), 1.75)))
+
     def all_boxes(self):
         if not len(self.people):
             return self.boxes
-        p = self.people
-        body = np.column_stack((p[:, 0]-p[:, 4], p[:, 1]-p[:, 4], np.zeros(len(p)),
-                                p[:, 0]+p[:, 4], p[:, 1]+p[:, 4], np.full(len(p), 1.75)))
-        return np.concatenate((self.boxes, body))
+        return np.concatenate((self.boxes, self.people_boxes()))
 
     def change_clutter(self, rng, robot_pose, robot):
         """Move/place a bag between steps, outside the robot's immediate footprint."""
@@ -43,7 +47,7 @@ class World:
             return True
         return False
 
-    def move_people(self, dt, rng):
+    def move_people(self, dt, rng, robot_position=None, robot_radius=0., cooperative=True):
         for p in self.people:
             if rng.random() < dt * .25:
                 theta = rng.uniform(-np.pi, np.pi)
@@ -53,8 +57,19 @@ class World:
             if (circle_boxes(candidate, p[4], self.boxes, 1.75) or
                     circle_rects(candidate, p[4], self.cliffs)):
                 p[2:4] *= -1
-            else:
-                p[:2] = candidate
+                continue
+            if cooperative and robot_position is not None:
+                away = p[:2]-np.asarray(robot_position)
+                clearance = p[4]+robot_radius+.10
+                if np.linalg.norm(candidate-robot_position) < clearance:
+                    distance = np.linalg.norm(away)
+                    direction = away/distance if distance > 1e-9 else np.array([1., 0.])
+                    speed = max(np.linalg.norm(p[2:4]), .15)
+                    p[2:4] = direction*speed
+                    candidate = p[:2]+dt*p[2:4]
+                    if np.linalg.norm(candidate-robot_position) < clearance:
+                        continue
+            p[:2] = candidate
 
 
 def generate_world(rng, config, robot):

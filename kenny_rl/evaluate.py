@@ -44,6 +44,15 @@ def evaluate_model(model, robot, config, episodes, seed=20000, progress_every=0)
             "mean_steps": float(np.mean([r["steps"] for r in records])),
             "shield": config.shield, "success_rate": np.mean([r["is_success"] for r in records]).item(),
             "collision_rate": np.mean([r["event"] == "collision" for r in records]).item(),
+            "person_collision_rate": np.mean([
+                r["event"] == "collision" and r["collision_source"] == "person" for r in records]).item(),
+            "stationary_person_contact_rate": np.mean([
+                r["event"] == "collision" and r["collision_source"] == "person" and
+                r["collision_linear_speed"] < .05 for r in records]).item(),
+            "robot_motion_collision_rate": np.mean([
+                r["event"] == "collision" and not (
+                    r["collision_source"] == "person" and r["collision_linear_speed"] < .05)
+                for r in records]).item(),
             "cliff_rate": np.mean([r["event"] == "cliff" for r in records]).item(),
             "timeout_rate": np.mean([r["event"] == "timeout" for r in records]).item(),
             "intervention_fraction": sum(r["interventions"] for r in records)/sum(r["steps"] for r in records),
