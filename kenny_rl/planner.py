@@ -16,10 +16,19 @@ class GridPlanner:
         self.navigation_mode = "goal"
         self.clearance_weight = clearance_weight
 
-        k = int(np.ceil((radius + .06) / resolution))
+        # A range endpoint identifies an occupied grid cell, so account for
+        # uncertainty within half of that cell's diagonal in addition to the
+        # robot footprint.  The previous radius+resolution threshold added a
+        # complete extra cell and, at the default resolution, blocked diagonal
+        # neighbours too.  Several nearby hits could then seal a genuinely
+        # traversable corridor and keep it sealed as observations refreshed.
+        # This remains conservative without applying that unintended second
+        # grid-cell inflation.
+        observed_margin = radius + resolution / np.sqrt(2)
+        k = int(np.ceil(observed_margin / resolution))
         self.offsets = np.array([(x, y) for x in range(-k, k + 1)
                                  for y in range(-k, k + 1)
-                                 if np.hypot(x, y) * resolution <= radius + resolution], dtype=int)
+                                 if np.hypot(x, y) * resolution <= observed_margin], dtype=int)
 
     def cell(self, point):
         return tuple(np.clip(np.asarray(point) / self.resolution, 0, self.n - 1).astype(int))

@@ -44,6 +44,22 @@ def test_observing_unknown_obstacle_still_adds_temporary_memory():
     assert planner.expires[planner.cell([5., 5.])] == 57
 
 
+def test_observed_obstacle_inflation_uses_grid_cell_uncertainty():
+    planner = GridPlanner(8, .25, .16)
+    cell = np.asarray(planner.cell([5., 5.]))
+    planner.observe([[5., 5.]], step=0)
+
+    # The robot footprint plus half a cell diagonal blocks the four adjacent
+    # cells. It must not add the old full-cell margin, which also blocked the
+    # diagonal ring and could close otherwise traversable mixed-stage routes.
+    for offset in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
+        index = tuple(cell + offset)
+        assert planner.expires[index] == 50
+    for offset in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
+        index = tuple(cell + offset)
+        assert planner.expires[index] == 0
+
+
 def test_clearance_configuration_validates_and_keeps_policy_contract():
     for weight in (-1, float("nan"), float("inf")):
         with pytest.raises(ValueError):
