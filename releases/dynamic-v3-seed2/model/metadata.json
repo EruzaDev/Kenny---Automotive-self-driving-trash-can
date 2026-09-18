@@ -1,0 +1,29 @@
+{
+  "seed": 2,
+  "resume": "runs/server-mixed-v3-planner-finetune/seed_2/best.zip",
+  "python": "3.11.0rc1 (main, Aug 12 2022, 10:02:14) [GCC 11.2.0]",
+  "torch": "2.5.1+cu124",
+  "schema": "kenny-geometric-v3",
+  "hardware": {
+    "device": "cuda:0",
+    "name": "NVIDIA RTX A5000",
+    "cuda_runtime": "12.4"
+  },
+  "headless": true,
+  "source_sha256": {
+    "geometry.py": "3895a804a1e3e69595d538ba061820c85698e71d4c83491543f4150bec8d5d98",
+    "runtime.py": "59ac1cb7cab1c3e601a64ac78483dd0360c13936fb9a08abd2a16cdd04e6bc53",
+    "sensors.py": "c7fc90aa723fa6f9bef7015ce154a10d977ddc700ae1a270b44f40099f5ad84d",
+    "planner.py": "ec580158780ca0b54e13ac52e655e75b501b6f24f54a8b5b7d5363ebf5b71913",
+    "env.py": "f40098d81d3facc9bb2e4f810c36ff25f1f7e4c844ec8999b51e059853aa47a9",
+    "__init__.py": "907f518ef8e302313964d59e155171864cff198641f74313a26cc96dd84a0843",
+    "evaluate.py": "e3b49aca45cb4a1ab134d0310c27ac8a26e7a1373585a1cd08f1264b5114baf0",
+    "config.py": "f1f6e34770dcb49ecb762231165c2515263f95d8e44b69424786e11563b8166d",
+    "benchmark.py": "a1858d25ea0efbf128a144477ebe734ff500dca35353eb30025e86928d5378b9",
+    "bootstrap.py": "643d4e4e918ffd7542aa8cc2bf54d8f4e170efaa1ea0f43fe37ddd7767174375",
+    "train.py": "f0e2e3c8f5941a1893a4f59afeb0dc09d79414e7c8ca75467c231d7e55783cd5",
+    "demo.py": "f662ccf58a80435c12003f9a1813310ff4087b17d06ba9efb237155902258a1c",
+    "render.py": "6492dd2de19c47e08c39ffd22d6b30140a81959302794637034e04f38b5450ee",
+    "world.py": "f5da1114e07eab82fc6565cc19c29eb0469c88d3b8576f6b9f07bab5f7a2382a"
+  }
+}
