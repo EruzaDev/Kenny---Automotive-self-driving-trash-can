@@ -22,6 +22,7 @@ FEATURES = [("lidar_range", 72), ("lidar_valid", 72),
 FRAME_SIZE = sum(n for _, n in FEATURES)
 SCHEMA_VERSION = "kenny-geometric-v3"
 OBSTACLE_REASONS = {"lidar_obstacle", "depth_obstacle", "floor_hazard", "downward_hazard"}
+ARRIVAL_RADIUS = .25
 
 
 class KennyEnv(gym.Env):
@@ -164,7 +165,8 @@ class KennyEnv(gym.Env):
         self.planner.observe(points, self.steps, ttl=10000)
 
     def _replan(self):
-        self.route = self.planner.navigation_path(self.estimate[:2], self.world.goal, self.steps)
+        self.route = self.planner.navigation_path(
+            self.estimate[:2], self.world.goal, self.steps, goal_tolerance=ARRIVAL_RADIUS)
 
     def _remaining(self):
         if not len(self.route):
@@ -213,18 +215,6 @@ class KennyEnv(gym.Env):
     def _observation(self):
         return np.concatenate(self.history).astype(np.float32)
 
-    @staticmethod
-    def _lidar_coverage_insufficient(valid):
-        """Reject broad blind sectors, not isolated independent ray dropout."""
-        valid = np.asarray(valid, dtype=bool)
-        if not len(valid):
-            return True
-        invalid = ~valid
-        broad_gap = (len(invalid) >= 3 and
-                     np.any(np.convolve(invalid.astype(np.int8), np.ones(3, dtype=np.int8),
-                                        mode="valid") == 3))
-        return bool(broad_gap or np.count_nonzero(valid) < .8*len(valid))
-
     def _guard(self, target):
         """Stop using sensor evidence only, never a simulator collision query."""
         self.guard_reasons = ()
@@ -241,11 +231,11 @@ class KennyEnv(gym.Env):
             reasons.append("downward_invalid")
         if self.uncertainty > .35:
             reasons.append("localization_uncertain")
-        # Neighboring 5-degree rays cover an isolated dropout at the short
-        # braking distances used here. Stop for a broad blind sector or poor
-        # aggregate coverage, including complete sensor outages.
+        # Sensor unknowns in the direction of travel cause a conservative stop.
+        # A simulated isolated-ray relaxation was rejected after it introduced
+        # a guarded collision on paired mixed-stage validation.
         front = np.abs(self.lidar.angles) < np.deg2rad(40)
-        if self._lidar_coverage_insufficient(self.lidar.valid[front]):
+        if not np.all(self.lidar.valid[front]):
             reasons.append("lidar_invalid")
         if np.count_nonzero(self.depth.valid) < len(self.depth.valid)*.8:
             reasons.append("depth_invalid")
@@ -357,8 +347,8 @@ class KennyEnv(gym.Env):
         if event in ("collision", "cliff"):
             reward -= 50
         # Simulator truth checks success; it is never exposed as policy pose input.
-        elif (np.linalg.norm(self.pose[:2]-self.world.goal) < .25 and
-              goal_distance < .25 and
+        elif (np.linalg.norm(self.pose[:2]-self.world.goal) < ARRIVAL_RADIUS and
+              goal_distance < ARRIVAL_RADIUS and
               abs(self.velocity[0]) < .05 and abs(self.velocity[1]) < .1):
             event, reward = "success", reward+20
         terminated = event != "running"

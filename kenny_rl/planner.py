@@ -101,7 +101,7 @@ class GridPlanner:
                 blocked[cells[:, 0], cells[:, 1]] = True
         return blocked
 
-    def navigation_path(self, start, goal, step=0):
+    def navigation_path(self, start, goal, step=0, goal_tolerance=0.):
         """Prefer a known route to the goal, otherwise route to a frontier.
 
         Frontiers are reachable free cells adjacent to unknown cells. Retain a
@@ -109,6 +109,19 @@ class GridPlanner:
         Goal position is assumed supplied in the localization/map frame.
         """
         route = self.path(start, goal, step)
+        # A collision-free continuous goal can share a coarse grid cell with
+        # inflated temporary occupancy.  In a known map, route to a free cell
+        # already inside the environment's arrival radius instead of waiting
+        # forever for repeatedly observed occupancy to expire.  Never clear the
+        # obstacle or use this fallback for a merely blocked route elsewhere.
+        goal_blocked = self.blocked(step)[self.cell(goal)]
+        if (not len(route) and not self.progressive and goal_tolerance > 0 and
+                goal_blocked):
+            route = self.path_to_goal_region(start, goal, goal_tolerance, step)
+            if len(route):
+                self.navigation_mode = "goal_tolerance"
+                self.exploration_target = None
+                return route
         if len(route) or not self.progressive:
             self.navigation_mode = "goal" if len(route) else "blocked"
             self.exploration_target = None
@@ -156,6 +169,24 @@ class GridPlanner:
         while cells[-1] != a:
             cells.append(previous[cells[-1]])
         return np.array([self.point(c) for c in reversed(cells)])
+
+    def path_to_goal_region(self, start, goal, tolerance, step=0):
+        """Route to the closest reachable free cell strictly inside tolerance."""
+        if tolerance <= 0:
+            return np.empty((0, 2))
+        blocked = self.blocked(step)
+        candidates = []
+        for cell in np.argwhere(~blocked):
+            point = self.point(cell)
+            distance = float(np.linalg.norm(point-goal))
+            if distance < tolerance:
+                route = self.path(start, point, step)
+                if len(route):
+                    length = float(np.linalg.norm(np.diff(route, axis=0), axis=1).sum())
+                    candidates.append((distance, length, route))
+        if not candidates:
+            return np.empty((0, 2))
+        return min(candidates, key=lambda item: (item[0], item[1]))[2]
 
     def neighbors(self, current, blocked):
         for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1),

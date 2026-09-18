@@ -31,7 +31,7 @@ frozen mixed checkpoint with the updated source before fine-tuning.  Use the
 same validation seeds and keep guarded and unshielded reports separate.  Do
 not select or tune on the held-out test split.
 
-## Forward LiDAR validity coverage
+## Rejected forward LiDAR validity relaxation
 
 Mixed validation after planner fine-tuning still attributed about 19.2% of all
 steps to `lidar_invalid`.  The old guard required every forward LiDAR ray to be
@@ -39,18 +39,34 @@ valid.  With 15 forward rays and independent 1.5% simulated dropout, the chance
 of at least one invalid ray is about 20%, so ordinary isolated dropout was being
 treated like a complete sensor failure.
 
-The guard now accepts isolated or two-ray gaps when neighbouring rays retain
-coverage.  It stops for three adjacent invalid forward rays or less than 80%
-aggregate forward coverage.  Complete outages therefore still stop motion.
-Obstacle distance checks, depth/floor/downward validity checks, localization
-health, and the physical shield remain unchanged.  This is a simulator rule
-that must later be calibrated against the real LiDAR's angular sampling,
-correlated failures, stale scans, and diagnostic status; it is not permission
-to treat unknown space as free.
+An experiment accepted isolated or two-ray gaps while stopping for three
+adjacent invalid rays or less than 80% aggregate coverage.  On a 100-episode
+debug-follower check it retained 88/100 success and zero contacts while reducing
+interventions from 39.1% to 27.0%.  However, the decisive 200-episode frozen-PPO
+validation produced one guarded collision, compared with zero under the
+original rule, for only a 0.5 percentage-point success increase.  The
+relaxation was therefore rejected and the guard again requires every forward
+LiDAR ray to be valid.
 
-On the same 100 guarded mixed validation seeds used for the debug follower
-check above, success remained 88/100 with zero contacts.  Total interventions
-fell from 39.1% to 27.0%, and `lidar_invalid` stops fell to 1.38% of steps.
-No-route time was 6.5%.  The unchanged success count shows that removing false
-stops is necessary but not by itself evidence that the frozen PPO policy or the
-planner has met the mixed-stage release target.
+Real hardware may eventually use temporal filtering or a driver-level scan
+health model, but only after recorded-sensor validation demonstrates that it
+does not hide thin or newly appearing obstacles.  Independent per-ray dropout
+in this analytical simulator is not sufficient evidence for weakening the
+safety rule.
+
+## Blocked goal-cell tolerance
+
+The downloaded fine-tuning run repeatedly failed validation scenario 10025.
+The robot travelled about 7 m and then spent 810--890 of 1,200 steps without a
+route.  Replay showed that the exact-geometry and structural-map planners still
+had valid routes.  Eight temporary cells near an overhang blocked the coarse
+grid cell containing the goal, even though the overhang was 0.396 m from the
+continuous goal and the robot radius was 0.163 m.
+
+Known-map planning now retains exact-goal routing as its first choice.  Only
+when temporary occupancy blocks the goal cell, it may route to the closest
+reachable free cell strictly inside the existing 0.25 m arrival radius.  It
+does not clear temporary occupancy, route through an occupied cell, expand the
+arrival criterion, or bypass a blockage elsewhere.  Progressive mapping keeps
+its existing frontier behavior.  The environment still requires both true and
+estimated pose to be inside the unchanged arrival radius at low velocity.
