@@ -25,6 +25,9 @@ OBSTACLE_REASONS = {"lidar_obstacle", "depth_obstacle", "floor_hazard", "downwar
 FULL_STOP_REASONS = {"downward_hazard", "downward_invalid", "floor_hazard", "floor_invalid"}
 ARRIVAL_RADIUS = .25
 ROUTE_LOOKAHEAD_DISTANCES = np.array([.5, 1., 2.])
+PLANAR_OBSTACLE_BUFFER = .05
+DEPTH_OBSTACLE_BUFFER = .15
+TRANSLATION_TURN_RATE_LIMIT = .55
 
 
 class KennyEnv(gym.Env):
@@ -259,7 +262,12 @@ class KennyEnv(gym.Env):
         speed = max(abs(self.velocity[0]), abs(target[0]))
         # Use a configured lower bound, never the hidden episode dynamics.
         braking = speed**2/(2*r.acceleration*min(c.acceleration_scale_range[0], 1.))
-        margin = r.radius + .05 + braking + speed*(c.dt + 1/r.lidar_hz)
+        base_margin = r.radius + braking + speed*(c.dt + 1/r.lidar_hz)
+        planar_margin = base_margin + PLANAR_OBSTACLE_BUFFER
+        # A forward depth camera is the only sensor that can see obstacles
+        # above or below the LiDAR plane.  Preserve extra distance for its
+        # limited field of view, minimum range and noisy edge returns.
+        depth_margin = base_margin + DEPTH_OBSTACLE_BUFFER
         moving = target[0] > 0 or abs(target[1]) > 0
         reasons = []
         if np.any(self.down_hazard):
@@ -278,13 +286,21 @@ class KennyEnv(gym.Env):
             reasons.append("depth_invalid")
         if np.count_nonzero(self.floor.valid) < len(self.floor.valid)*.5:
             reasons.append("floor_invalid")
+        # With no side depth cameras, translating through a tight arc can move
+        # the circular body into a height obstacle that never entered the
+        # Astra's forward field of view.  Turn in place first so the camera
+        # observes the intended direction before forward motion resumes.
+        if (target[0] > 0 and
+                max(abs(self.velocity[1]), abs(target[1])) > TRANSLATION_TURN_RATE_LIMIT):
+            reasons.append("turning_fast")
         for name, scan in (("lidar", self.lidar), ("depth", self.depth)):
             lateral = np.abs(scan.ranges*np.sin(scan.angles))
             ahead = scan.ranges*np.cos(scan.angles)
-            collision = scan.hits & (lateral < r.radius+.05) & (ahead > 0) & (ahead < margin)
+            margin = depth_margin if name == "depth" else planar_margin
+            collision = scan.hits & (lateral < r.radius+PLANAR_OBSTACLE_BUFFER) & (ahead > 0) & (ahead < margin)
             if np.any(collision):
                 reasons.append(name+"_obstacle")
-        if np.any(self.floor.hits & (self.floor.ranges < margin)):
+        if np.any(self.floor.hits & (self.floor.ranges < planar_margin)):
             reasons.append("floor_hazard")
         if moving and reasons:
             self.guard_reasons = tuple(reasons)

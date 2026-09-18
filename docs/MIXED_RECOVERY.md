@@ -126,3 +126,18 @@ route projection.  This preserves the observation meaning across planner grid
 resolutions; the previous fixed waypoint offsets `[2, 4, 8]` accidentally
 halved the lookahead horizon on the 0.125 m grid.  Re-evaluate the frozen
 checkpoint with this correction before fine-tuning it.
+
+## Forward-camera safety envelope
+
+Held-out mixed testing exposed collisions with low bags and body-height
+overhangs that do not intersect the 0.22 m LiDAR plane.  The forward Astra is
+the only configured sensor that can observe these hazards, and it has no side
+coverage.  The shield therefore suppresses translation whenever either the
+requested or current angular velocity exceeds 0.55 rad/s, while preserving
+the turn command.  This rotate-before-translate behavior lets the camera view
+the intended direction before the robot advances.  Depth hits also receive a
+0.15 m obstacle buffer instead of the planar scan's 0.05 m buffer.
+
+These controls reduce risk but cannot make an unobserved obstacle observable.
+Physical deployment still requires a bumper/emergency stop and conservative
+commissioning speeds.  They must not be described as a collision guarantee.

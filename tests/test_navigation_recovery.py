@@ -201,6 +201,37 @@ def test_rotation_recovery_never_overrides_floor_or_downward_interlock():
     assert downward_stopped
 
 
+def test_guard_turns_in_place_before_translating_through_tight_arc():
+    env = KennyEnv(config=EnvConfig(stage="empty"))
+    env.reset(seed=1)
+    clear_sensors(env)
+
+    env.velocity[1] = .56
+    target, stopped = env._guard(np.array([.2, .1]))
+
+    np.testing.assert_array_equal(target, [0., .1])
+    assert stopped and "turning_fast" in env.guard_reasons
+
+    env.velocity[1] = .5
+    target, stopped = env._guard(np.array([.2, .5]))
+    np.testing.assert_array_equal(target, [.2, .5])
+    assert not stopped and env.guard_reasons == ()
+
+
+def test_depth_obstacle_gets_extra_stopping_buffer():
+    env = KennyEnv(config=EnvConfig(stage="empty"))
+    env.reset(seed=1)
+    clear_sensors(env)
+    center = np.argmin(abs(env.depth.angles))
+    env.depth.hits[center] = True
+    env.depth.ranges[center] = .48
+
+    target, stopped = env._guard(np.array([.3, 0.]))
+
+    np.testing.assert_array_equal(target, [0., 0.])
+    assert stopped and "depth_obstacle" in env.guard_reasons
+
+
 def test_episode_diagnostics_reset_and_count_no_route_separately():
     env = KennyEnv(config=EnvConfig(stage="empty"))
     env.reset(seed=1)

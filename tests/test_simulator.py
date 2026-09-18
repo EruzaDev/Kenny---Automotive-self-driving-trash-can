@@ -332,5 +332,7 @@ def test_arrival_shaping_prefers_progress_outside_arrival_radius():
     moving.previous_remaining = moving._remaining()
     moving.velocity[:] = [.20, .30]
     moving.measured_velocity[:] = moving.velocity
-    _, moving_reward, _, _, _ = moving.step([1., 1.])
+    # Stay below the rotate-before-translate guard boundary; this test covers
+    # arrival shaping rather than the sharp-turn safety envelope.
+    _, moving_reward, _, _, _ = moving.step([1., .8])
     assert moving_reward > stop_reward
