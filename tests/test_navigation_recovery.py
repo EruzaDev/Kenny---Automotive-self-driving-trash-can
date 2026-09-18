@@ -131,7 +131,10 @@ def test_guard_reasons_stop_motion_and_reset(reason):
             scan.hits[i], scan.ranges[i] = True, .1
     target, stopped = env._guard(np.array([.3, .2]))
     assert stopped and reason in env.guard_reasons
-    np.testing.assert_array_equal(target, [0, 0])
+    if reason in {"downward_hazard", "downward_invalid", "floor_hazard", "floor_invalid"}:
+        np.testing.assert_array_equal(target, [0, 0])
+    else:
+        np.testing.assert_array_equal(target, [0, .2])
     clear_sensors(env)
     _, stopped = env._guard(np.array([.3, .2]))
     assert not stopped and env.guard_reasons == ()
@@ -147,6 +150,21 @@ def test_guard_stops_for_isolated_forward_lidar_dropout():
     target, stopped = env._guard(np.array([.3, 0.]))
     np.testing.assert_array_equal(target, [0., 0.])
     assert stopped and "lidar_invalid" in env.guard_reasons
+
+
+def test_rotation_recovery_never_overrides_floor_or_downward_interlock():
+    env = KennyEnv(config=EnvConfig(stage="empty"))
+    env.reset(seed=1)
+    clear_sensors(env)
+    env.lidar.valid[:] = False
+    target, lidar_stopped = env._guard(np.array([.3, .25]))
+    np.testing.assert_array_equal(target, [0., .25])
+    assert lidar_stopped
+
+    env.down_valid[0] = False
+    target, downward_stopped = env._guard(np.array([.3, .25]))
+    np.testing.assert_array_equal(target, [0., 0.])
+    assert downward_stopped
 
 
 def test_episode_diagnostics_reset_and_count_no_route_separately():

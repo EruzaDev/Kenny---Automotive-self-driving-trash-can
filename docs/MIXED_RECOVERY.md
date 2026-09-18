@@ -70,3 +70,24 @@ does not clear temporary occupancy, route through an occupied cell, expand the
 arrival criterion, or bypass a blockage elsewhere.  Progressive mapping keeps
 its existing frontier behavior.  The environment still requires both true and
 estimated pose to be inside the unchanged arrival radius at low velocity.
+
+## Guarded in-place recovery
+
+The 200-episode goal-tolerance evaluation left 17 timeouts.  Nine retained a
+valid route but spent 78--96% of the episode under shield intervention, often
+with a frontal obstacle or invalid depth view.  The former guard stopped both
+translation and rotation, so a policy requesting a turn could not change its
+view or heading.
+
+For frontal LiDAR/depth obstacles, their validity failures, and localization
+uncertainty, the guard now clamps linear velocity to zero while preserving the
+requested angular velocity.  The simulator collision footprint is the robot's
+circumscribed circle, so an in-place turn adds no swept area.  Downward hazard,
+downward invalidity, floor hazard, and floor invalidity remain full stops; the
+recovery cannot override them.  Shadow guard behavior remains non-actuating in
+explicitly unshielded evaluation.
+
+Before implementation, targeted frozen-policy replay recovered six of the nine
+route-available shield deadlocks with full requested angular velocity and no
+contacts.  This targeted result requires a new full guarded validation; it is
+not a release claim.

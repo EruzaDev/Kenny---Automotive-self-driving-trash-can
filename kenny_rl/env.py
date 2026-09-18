@@ -22,6 +22,7 @@ FEATURES = [("lidar_range", 72), ("lidar_valid", 72),
 FRAME_SIZE = sum(n for _, n in FEATURES)
 SCHEMA_VERSION = "kenny-geometric-v3"
 OBSTACLE_REASONS = {"lidar_obstacle", "depth_obstacle", "floor_hazard", "downward_hazard"}
+FULL_STOP_REASONS = {"downward_hazard", "downward_invalid", "floor_hazard", "floor_invalid"}
 ARRIVAL_RADIUS = .25
 
 
@@ -252,6 +253,14 @@ class KennyEnv(gym.Env):
         if moving and reasons:
             self.guard_reasons = tuple(reasons)
             if self.shield_active:
+                # The circular collision model uses the robot's circumscribed
+                # footprint, so an in-place turn creates no new swept area.
+                # Preserve turning to escape frontal sensor/obstacle traps or
+                # reacquire landmarks, but never rotate through uncertain
+                # floor/cliff coverage. Translation remains clamped to zero.
+                if (not FULL_STOP_REASONS.intersection(reasons) and
+                        abs(target[1]) > 0):
+                    return np.array([0., target[1]]), True
                 return np.zeros(2), True
         return target, False
 
