@@ -110,6 +110,33 @@ def test_guard_reasons_stop_motion_and_reset(reason):
     assert not stopped and env.guard_reasons == ()
 
 
+def test_guard_tolerates_isolated_lidar_dropout_but_stops_for_blind_sector():
+    env = KennyEnv(config=EnvConfig(stage="empty"))
+    env.reset(seed=1)
+    clear_sensors(env)
+    front = np.flatnonzero(np.abs(env.lidar.angles) < np.deg2rad(40))
+
+    env.lidar.valid[front[len(front)//2]] = False
+    target, stopped = env._guard(np.array([.3, 0.]))
+    np.testing.assert_array_equal(target, [.3, 0.])
+    assert not stopped and "lidar_invalid" not in env.guard_reasons
+
+    env.lidar.valid[:] = True
+    middle = len(front)//2
+    env.lidar.valid[front[middle-1:middle+2]] = False
+    target, stopped = env._guard(np.array([.3, 0.]))
+    np.testing.assert_array_equal(target, [0., 0.])
+    assert stopped and "lidar_invalid" in env.guard_reasons
+
+
+def test_lidar_coverage_rejects_many_scattered_invalid_rays():
+    valid = np.ones(15, dtype=bool)
+    valid[[0, 4, 8, 12]] = False
+    assert KennyEnv._lidar_coverage_insufficient(valid)
+    valid[:] = False
+    assert KennyEnv._lidar_coverage_insufficient(valid)
+
+
 def test_episode_diagnostics_reset_and_count_no_route_separately():
     env = KennyEnv(config=EnvConfig(stage="empty"))
     env.reset(seed=1)

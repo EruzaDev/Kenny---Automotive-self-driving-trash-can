@@ -30,3 +30,27 @@ scaling, and the serialized model contract are unchanged.  Re-evaluate the
 frozen mixed checkpoint with the updated source before fine-tuning.  Use the
 same validation seeds and keep guarded and unshielded reports separate.  Do
 not select or tune on the held-out test split.
+
+## Forward LiDAR validity coverage
+
+Mixed validation after planner fine-tuning still attributed about 19.2% of all
+steps to `lidar_invalid`.  The old guard required every forward LiDAR ray to be
+valid.  With 15 forward rays and independent 1.5% simulated dropout, the chance
+of at least one invalid ray is about 20%, so ordinary isolated dropout was being
+treated like a complete sensor failure.
+
+The guard now accepts isolated or two-ray gaps when neighbouring rays retain
+coverage.  It stops for three adjacent invalid forward rays or less than 80%
+aggregate forward coverage.  Complete outages therefore still stop motion.
+Obstacle distance checks, depth/floor/downward validity checks, localization
+health, and the physical shield remain unchanged.  This is a simulator rule
+that must later be calibrated against the real LiDAR's angular sampling,
+correlated failures, stale scans, and diagnostic status; it is not permission
+to treat unknown space as free.
+
+On the same 100 guarded mixed validation seeds used for the debug follower
+check above, success remained 88/100 with zero contacts.  Total interventions
+fell from 39.1% to 27.0%, and `lidar_invalid` stops fell to 1.38% of steps.
+No-route time was 6.5%.  The unchanged success count shows that removing false
+stops is necessary but not by itself evidence that the frozen PPO policy or the
+planner has met the mixed-stage release target.
