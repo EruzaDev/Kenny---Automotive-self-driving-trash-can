@@ -91,3 +91,31 @@ Before implementation, targeted frozen-policy replay recovered six of the nine
 route-available shield deadlocks with full requested angular velocity and no
 contacts.  This targeted result requires a new full guarded validation; it is
 not a release claim.
+
+## Fine planner grid
+
+The guarded turn-recovery evaluation reached 188/200 successes with zero
+contacts.  Five of the remaining timeouts lost their route even though a
+diagnostic planner built from exact simulator geometry could still reach the
+goal.  Rather than weaken footprint inflation, `configs/server_mixed_finegrid.json`
+halves the planner cell size from 0.25 m to 0.125 m.  This increases grid cells
+by approximately four times in a fixed-size room, so runtime must be measured.
+It does not change policy observations or actions.
+
+On the five previously blocked scenarios, frozen-policy replay restored routes
+for all five, produced four successes and one long-route timeout, and produced
+no contacts.  Evaluate the complete frozen checkpoint before using the profile
+for fine-tuning:
+
+```bash
+python -m kenny_rl.evaluate \
+  --model runs/server-mixed-v3-planner-finetune/seed_3/best.zip \
+  --stage mixed --split validation --seed 15000 --episodes 200 \
+  --grid-resolution 0.125 --progress-every 20 \
+  --output artifacts/mixed-v3-planner-finetune/best-guarded-finegrid.json
+```
+
+The report records `grid_resolution` explicitly.  Do not compare it with an
+older report without checking that field.  If frozen validation is safe but
+requires policy adaptation, resume into a new run with the fine-grid profile;
+never edit a completed run's serialized configuration in place.

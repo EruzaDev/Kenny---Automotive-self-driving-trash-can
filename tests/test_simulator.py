@@ -279,6 +279,7 @@ def test_evaluation_reports_periodic_and_final_progress(capsys):
     assert "Evaluation 2/3" in output
     assert "Evaluation 3/3" in output
     assert result["episodes"] == 3
+    assert result["grid_resolution"] == .25
 
 
 def test_timeout_has_an_explicit_terminal_penalty():

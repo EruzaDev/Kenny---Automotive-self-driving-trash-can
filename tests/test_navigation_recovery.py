@@ -98,6 +98,14 @@ def test_clearance_configuration_validates_and_keeps_policy_contract():
     assert json.loads(json.dumps(asdict(normalized))) == json.loads(json.dumps(asdict(original)))
 
 
+def test_mixed_fine_grid_profile_preserves_policy_contract():
+    robot, baseline, _ = load_config("configs/server_static_avoidance.json")
+    fine_robot, fine, training = load_config("configs/server_mixed_finegrid.json")
+    assert fine.stage == "mixed" and fine.grid_resolution == .125
+    assert training["total_timesteps"] == 150000 and training["dual_validation"]
+    assert KennyEnv(robot, baseline).contract() == KennyEnv(fine_robot, fine).contract()
+
+
 def clear_sensors(env):
     env.uncertainty = .02
     env.down_hazard[:] = False

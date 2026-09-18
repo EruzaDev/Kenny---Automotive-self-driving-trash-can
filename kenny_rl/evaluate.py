@@ -39,6 +39,7 @@ def evaluate_model(model, robot, config, episodes, seed=20000, progress_every=0)
     reasons = sorted({key for r in records for key in r["intervention_reasons"]})
     return {"episodes": episodes, "split": config.split, "stage": config.stage,
             "map_mode": config.map_mode,
+            "grid_resolution": config.grid_resolution,
             "route_clearance_weight": config.route_clearance_weight,
             "mean_steps": float(np.mean([r["steps"] for r in records])),
             "shield": config.shield, "success_rate": np.mean([r["is_success"] for r in records]).item(),
@@ -65,6 +66,8 @@ def main():
     p.add_argument("--map-mode", choices=["known", "progressive"])
     p.add_argument("--route-clearance-weight", type=float,
                    help="Override planner clearance cost for a controlled evaluation")
+    p.add_argument("--grid-resolution", type=float,
+                   help="Override planner grid size in metres; policy contract is unchanged")
     p.add_argument("--progress-every", type=int, default=10,
                    help="Print progress every N episodes; use 0 to disable")
     p.add_argument("--output", required=True)
@@ -80,6 +83,10 @@ def main():
                      stage=args.stage or config.stage, map_mode=args.map_mode or config.map_mode)
     if args.route_clearance_weight is not None:
         config = replace(config, route_clearance_weight=args.route_clearance_weight)
+    if args.grid_resolution is not None:
+        if not np.isfinite(args.grid_resolution) or args.grid_resolution <= 0:
+            p.error("--grid-resolution must be finite and positive")
+        config = replace(config, grid_resolution=args.grid_resolution)
     expected = json.loads((source/"contract.json").read_text())
     if expected != json.loads(json.dumps(KennyEnv(robot, config).contract())):
         p.error("Model and environment observation contracts differ")
