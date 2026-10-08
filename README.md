@@ -110,6 +110,61 @@ python -m kenny_rl.train --config configs/server_21x10.json --run runs/full-21x1
 
 `world_width` and `world_height` set the generated room axes. They default to `world_size` when absent, so older square configurations still behave unchanged. The size randomization is applied uniformly to both axes, preserving the room's aspect ratio.
 
+### Continue reviewed mixed-stage policies on larger rooms
+
+Use `server_mixed_21x21.json` and `server_mixed_21x10.json` to adapt existing
+mixed-stage policies without simultaneously introducing pedestrians or cliffs.
+These profiles preserve the avoidance reward, clearance cost, 20% simulation-only
+unshielded training mixture, and paired guarded/unshielded validation. Each run
+adds 250,000 transitions, with 30 validation episodes per mode every 25,000
+transitions, seven workers per learner, and a 1,800-step episode limit. Dimensions
+are nominal: domain randomization still varies both axes together by ±15%.
+
+On the server, activate the training virtual environment and work from the repo
+root. Ensure the previous training sweep has exited and your allocation grants
+four GPUs and 32 CPUs. Use a persistent terminal such as `tmux`; detaching keeps
+the launcher's session open, but does not extend a scheduler allocation.
+
+```bash
+python scripts/server_sweep.py \
+  --config configs/server_mixed_21x21.json \
+  --resume-from runs/server-mixed-v3-reviewed-all-gpus-continued \
+  --resume-checkpoint best_guarded.zip \
+  --output runs/server-mixed-21x21-reviewed \
+  --seeds 0 1 2 3 --devices cuda:0 cuda:1 cuda:2 cuda:3 \
+  --cpu-budget 32 --envs 7 --stage mixed --steps 250000
+```
+
+Append `--dry-run` to check all four resume artifacts/contracts without launching.
+The reviewed directory contains `best_guarded.zip` for every seed; no placeholder
+path or missing final checkpoint is needed. This selects each seed's guarded
+best, not necessarily its newest checkpoint. Do not disable the shield on hardware.
+
+After that sweep exits successfully, train the rectangular layout independently
+from the same source checkpoints (do not run both four-GPU sweeps simultaneously):
+
+```bash
+python scripts/server_sweep.py \
+  --config configs/server_mixed_21x10.json \
+  --resume-from runs/server-mixed-v3-reviewed-all-gpus-continued \
+  --resume-checkpoint best_guarded.zip \
+  --output runs/server-mixed-21x10-reviewed \
+  --seeds 0 1 2 3 --devices cuda:0 cuda:1 cuda:2 cuda:3 \
+  --cpu-budget 32 --envs 7 --stage mixed --steps 250000
+```
+
+Monitor from another terminal, regardless of its working directory:
+
+```bash
+tail -n 30 -F ~/Kenny---Automotive-self-driving-trash-can/runs/server-mixed-21x21-reviewed/seed_{0,1,2,3}.log
+```
+
+Change `21x21` to `21x10` when monitoring the rectangular sweep. Output directories
+must be new; the launcher refuses to overwrite one. Initial paired validation
+can take several minutes before rollout tables appear. These profiles change room
+size and episode budget; they do not fix the previously observed sensor-coverage
+deadlocks or obstacle-command loops. Evaluate held-out worlds before deployment.
+
 Runs contain:
 
 - `final.zip`, periodic `checkpoints/`, and `best.zip` after the first validation.

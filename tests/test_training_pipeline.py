@@ -35,6 +35,32 @@ def test_included_profiles_pass_preflight():
         validate_training(training)
 
 
+@pytest.mark.parametrize("height", [21, 10])
+def test_large_mixed_profiles_preserve_resume_contract_and_validation(height, monkeypatch):
+    from kenny_rl.env import KennyEnv
+    from scripts.server_sweep import worker_budget
+
+    robot, config, training = load_config(f"configs/server_mixed_21x{height}.json")
+    old_robot, old_config, _ = load_config("configs/server_static_avoidance.json")
+    assert KennyEnv(robot, config).contract() == KennyEnv(old_robot, old_config).contract()
+    assert (config.world_width, config.world_height) == (21, height)
+    assert config.stage == "mixed" and config.max_steps == 1800
+    assert config.shield and config.train_unshielded_fraction == .2
+    assert config.route_clearance_weight == 4
+    assert config.obstacle_command_penalty == old_config.obstacle_command_penalty
+    assert config.sensor_command_penalty == old_config.sensor_command_penalty
+    assert config.intervention_penalty == config.intervention_onset_penalty == 0
+    assert training["dual_validation"] and training["eval_episodes"] == 30
+    assert training["eval_freq"] == training["checkpoint_freq"] == 25000
+    validate_training(training)
+    # Four independent learners plus seven workers each fit 32 CPU slots.
+    assert training["n_envs"] == 7
+    assert training["n_envs"] * 4 + 4 == 32
+    monkeypatch.setattr(os, "sched_getaffinity", lambda _: set(range(32)))
+    monkeypatch.delenv("SLURM_CPUS_PER_TASK", raising=False)
+    assert worker_budget([f"cuda:{i}" for i in range(4)], 7, 7, 32) == (7, 32)
+
+
 @pytest.mark.parametrize("value", [float("nan"), float("inf")])
 def test_nonfinite_physics_and_environment_are_rejected(value):
     with pytest.raises(ValueError, match="finite"):
