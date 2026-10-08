@@ -1,0 +1,101 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Global Options:
+    Background Color: 30; 30; 30
+    Fixed Frame: camera_link
+    Frame Rate: 15
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid (1 meter)
+      Enabled: true
+      Cell Size: 1
+      Plane Cell Count: 20
+      Reference Frame: <Fixed Frame>
+    - Class: rviz_default_plugins/LaserScan
+      Name: Live LiDAR (select laser_frame as Fixed Frame)
+      Enabled: false
+      Topic:
+        Value: /scan
+        Reliability Policy: Best Effort
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 5
+      Size (m): 0.03
+      Style: Points
+      Color Transformer: FlatColor
+      Color: 0; 255; 100
+      Decay Time: 0
+      Use Fixed Frame: true
+    - Class: rviz_default_plugins/Image
+      Name: Live RGB Camera
+      Enabled: true
+      Topic:
+        Value: /camera/color/image_raw
+        Reliability Policy: Best Effort
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 2
+      Transport Hint: raw
+      Normalize Range: true
+    - Class: rviz_default_plugins/Image
+      Name: Live Depth Camera
+      Enabled: true
+      Topic:
+        Value: /camera/depth/image_raw
+        Reliability Policy: Best Effort
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 2
+      Transport Hint: raw
+      Normalize Range: true
+      Min Value: 0
+      Max Value: 8000
+    - Class: rviz_default_plugins/PointCloud2
+      Name: 3D Depth (RED near 0.5m - GREEN far 3m)
+      Enabled: true
+      Topic:
+        Value: /kenny/depth/points
+        Reliability Policy: Best Effort
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 2
+      Size (m): 0.01
+      Style: Points
+      Color Transformer: RGB8
+      Position Transformer: XYZ
+      Decay Time: 0
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Depth Rays (RED near - GREEN far)
+      Enabled: true
+      Topic:
+        Value: /kenny/depth/rays
+        Reliability Policy: Reliable
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Depth: 2
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Current View
+      Target Frame: <Fixed Frame>
+      Distance: 4
+      Focal Point:
+        X: 1.5
+        Y: 0
+        Z: 0
+      Pitch: 0.3
+      Yaw: 3.14
+Window Geometry:
+  Width: 1200
+  Height: 800
+  X: 30
+  Y: 30
