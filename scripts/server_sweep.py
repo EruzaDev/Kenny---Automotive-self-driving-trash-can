@@ -8,10 +8,18 @@ import signal
 import subprocess
 import sys
 import time
+from dataclasses import replace
+
+from kenny_rl.config import load_config, validate_training
 
 
 def worker_budget(devices, requested, configured, cpu_budget=None):
     """Reserve one CPU per learner; respect affinity and a scheduler/user cap."""
+    if not devices:
+        raise ValueError("At least one device is required")
+    for workers in (configured, requested):
+        if workers is not None and (type(workers) is not int or workers < 1):
+            raise ValueError("Worker count must be a positive integer")
     available = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else (os.cpu_count() or 1)
     for cap in (os.environ.get("SLURM_CPUS_PER_TASK"), cpu_budget):
         if cap is not None:
@@ -24,6 +32,28 @@ def worker_budget(devices, requested, configured, cpu_budget=None):
         raise ValueError(f"{available} allocated CPUs cannot support {workers} workers per run plus "
                          f"{len(devices)} learners; request more CPUs or fewer devices/workers")
     return workers, available
+
+
+def stop_process(process):
+    """Let the learner save first, then bound cleanup of its worker group."""
+    try:
+        process.send_signal(signal.SIGINT)
+        process.wait(timeout=15)
+        return
+    except ProcessLookupError:
+        return
+    except subprocess.TimeoutExpired:
+        pass
+    for signum in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.killpg(process.pid, signum)
+        except ProcessLookupError:
+            return
+        try:
+            process.wait(timeout=5)
+            return
+        except subprocess.TimeoutExpired:
+            continue
 
 
 def main():
@@ -50,15 +80,19 @@ def main():
         p.error("Devices must be unique; each GPU is one training slot")
     if args.steps is not None and args.steps < 1:
         p.error("Steps must be positive")
-    config = json.loads(Path(args.config).read_text())
+    robot, config, training = load_config(args.config)
+    if config.split != "train":
+        p.error("Training requires the train split")
+    config = replace(config, stage=args.stage)
     try:
-        workers, cpus = worker_budget(args.devices, args.envs, config["training"].get("n_envs", 8), args.cpu_budget)
+        workers, cpus = worker_budget(args.devices, args.envs, training.get("n_envs", 1), args.cpu_budget)
+        effective = {**training, "n_envs": workers}
+        if args.steps is not None:
+            effective["total_timesteps"] = args.steps
+        for device in args.devices:
+            validate_training({**effective, "device": device})
     except ValueError as exc:
         p.error(str(exc))
-    rollout = workers * config["training"].get("n_steps", 512)
-    batch = config["training"].get("batch_size", 512)
-    if batch < 2 or rollout < 2 or rollout % batch:
-        p.error("Worker override makes rollout size incompatible with batch_size")
     root = Path(args.output)
     if root.exists():
         p.error("Output directory already exists")
@@ -74,6 +108,10 @@ def main():
             for name in (args.resume_checkpoint, "config.json", "contract.json"):
                 if not (source/name).is_file():
                     p.error(f"Missing resume artifact: {source/name}")
+            from kenny_rl.env import KennyEnv
+            old = json.loads((source/"contract.json").read_text())
+            if old != json.loads(json.dumps(KennyEnv(robot, config).contract())):
+                p.error(f"Resume observation/robot contract differs: {source}")
             command += ["--resume", str(source/args.resume_checkpoint)]
         commands.append(command)
     print(f"Headless: {len(args.devices)} slots, {workers} workers/run, {cpus} allocated CPUs", flush=True)
@@ -123,12 +161,7 @@ def main():
     finally:
         for process, log, _, _ in active:
             if process.poll() is None:
-                os.killpg(process.pid, signal.SIGINT)
-                try:
-                    process.wait(timeout=15)
-                except subprocess.TimeoutExpired:
-                    os.killpg(process.pid, signal.SIGTERM)
-                    process.wait()
+                stop_process(process)
             log.close()
     if failed:
         raise SystemExit(f"Failed seeds: {failed}; see per-run logs")

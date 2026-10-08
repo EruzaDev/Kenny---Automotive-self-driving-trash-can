@@ -40,6 +40,9 @@ class RobotConfig:
         return self.motor_rpm * 2 * math.pi * self.wheel_radius / 60
 
     def __post_init__(self):
+        for name, value in asdict(self).items():
+            if type(value) not in (int, float) or not math.isfinite(value):
+                raise ValueError(f"{name} must be finite")
         for name in ("width", "length", "height", "track_width", "wheel_radius",
                      "motor_rpm", "max_speed", "max_turn_rate", "acceleration",
                      "angular_acceleration", "lidar_range", "lidar_hz", "camera_range",
@@ -90,6 +93,15 @@ class EnvConfig:
     sensor_outage_steps: tuple = (2, 5)
 
     def __post_init__(self):
+        for name in ("world_size", "world_width", "world_height", "dt", "grid_resolution", "sensor_noise"):
+            value = getattr(self, name)
+            if value is None and name in ("world_width", "world_height"):
+                continue
+            if type(value) not in (int, float) or not math.isfinite(value):
+                raise ValueError(f"{name} must be finite")
+        for name in ("max_steps", "history"):
+            if type(getattr(self, name)) is not int or getattr(self, name) < 1:
+                raise ValueError(f"{name} must be a positive integer")
         if not 0 <= self.train_unshielded_fraction <= 1:
             raise ValueError("train_unshielded_fraction must be in [0, 1]")
         for name in ("obstacle_command_penalty", "sensor_command_penalty",
@@ -141,3 +153,58 @@ def load_config(path):
 def serialize(robot, environment, training=None):
     return {"robot": asdict(robot), "environment": asdict(environment),
             "training": training or {}}
+
+
+def validate_training(training):
+    """Reject invalid settings before creating artifacts or starting workers."""
+    integer_defaults = {"n_envs": 1, "total_timesteps": 100000, "n_steps": 512,
+                        "batch_size": 128, "n_epochs": 5, "torch_threads": 1,
+                        "eval_freq": 25000, "eval_episodes": 5,
+                        "checkpoint_freq": 25000, "behavior_cloning_episodes": 0,
+                        "behavior_cloning_epochs": 10, "behavior_cloning_batch_size": 512}
+    numeric_defaults = {"learning_rate": 3e-4, "gamma": .99, "gae_lambda": .95,
+                        "clip_range": .2, "ent_coef": .005, "target_kl": None,
+                        "behavior_cloning_learning_rate": 3e-4,
+                        "behavior_cloning_log_std": -1.}
+    flags = {"dual_validation", "behavior_cloning_on_resume", "behavior_cloning_unshielded"}
+    unknown = set(training) - (integer_defaults.keys() | numeric_defaults.keys() |
+                               flags | {"device", "vector_backend"})
+    if unknown:
+        raise ValueError(f"Unknown training settings: {', '.join(sorted(unknown))}")
+    for key, default in integer_defaults.items():
+        value = training.get(key, default)
+        minimum = 0 if key == "behavior_cloning_episodes" else 2 if key == "batch_size" else 1
+        if type(value) is not int or value < minimum:
+            raise ValueError(f"{key} must be an integer >= {minimum}")
+    for key, default in numeric_defaults.items():
+        value = training.get(key, default)
+        if key == "target_kl" and value is None:
+            continue
+        if type(value) not in (int, float) or not math.isfinite(value):
+            raise ValueError(f"{key} must be finite")
+        if key in ("gamma", "gae_lambda"):
+            valid = 0 <= value <= 1
+        elif key == "ent_coef":
+            valid = value >= 0
+        elif key == "behavior_cloning_log_std":
+            # Normal log probabilities use the variance and its inverse in
+            # float32, so keep exp(2 * log_std) representable in both directions.
+            valid = -40 <= value <= 40
+        elif key == "clip_range":
+            valid = 0 < value <= 1
+        else:
+            valid = value > 0
+        if not valid:
+            raise ValueError(f"Invalid {key}: {value}")
+    for key in flags:
+        if type(training.get(key, False)) is not bool:
+            raise ValueError(f"{key} must be a boolean")
+    if training.get("vector_backend", "dummy") not in ("dummy", "subproc"):
+        raise ValueError("vector_backend must be dummy or subproc")
+    device = training.get("device", "cpu")
+    if not isinstance(device, str) or not (device == "cpu" or
+            device.startswith("cuda:") and device[5:].isdigit()):
+        raise ValueError("Device must be cpu or cuda:N")
+    rollout = training.get("n_envs", 1) * training.get("n_steps", 512)
+    if rollout < 2 or rollout % training.get("batch_size", 128):
+        raise ValueError("Rollout size must be >1 and divisible by batch_size")

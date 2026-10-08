@@ -40,8 +40,14 @@ def clone_policy(model, observations, actions, epochs, batch_size, learning_rate
         raise ValueError("Invalid behavior cloning optimizer settings")
     rng = np.random.default_rng(seed)
     device = model.device
-    obs = torch.as_tensor(observations, device=device)
-    targets = torch.as_tensor(actions, device=device)
+    if (len(observations) == 0 or len(observations) != len(actions) or
+            not np.isfinite(observations).all() or not np.isfinite(actions).all() or
+            not np.isfinite(learning_rate) or not np.isfinite(log_std)):
+        raise ValueError("Behavior cloning requires matching, nonempty finite samples and settings")
+    # Keep the dataset in host memory; GPU usage should depend on batch_size,
+    # not the number or length of successful demonstration episodes.
+    obs = torch.as_tensor(observations)
+    targets = torch.as_tensor(actions)
     optimizer = torch.optim.Adam(model.policy.parameters(), lr=learning_rate)
     losses = []
     model.policy.set_training_mode(True)
@@ -49,9 +55,9 @@ def clone_policy(model, observations, actions, epochs, batch_size, learning_rate
         indices = rng.permutation(len(observations))
         total = 0.
         for start in range(0, len(indices), batch_size):
-            batch = torch.as_tensor(indices[start:start+batch_size], device=device)
-            predicted = model.policy.get_distribution(obs[batch]).distribution.mean
-            loss = F.mse_loss(predicted, targets[batch])
+            batch = torch.as_tensor(indices[start:start+batch_size])
+            predicted = model.policy.get_distribution(obs[batch].to(device)).distribution.mean
+            loss = F.mse_loss(predicted, targets[batch].to(device))
             optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.policy.parameters(), .5)

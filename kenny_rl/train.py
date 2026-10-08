@@ -6,8 +6,9 @@ import os
 from pathlib import Path
 import importlib.metadata
 import hashlib
+import signal
 from functools import partial
-from .config import load_config, serialize
+from .config import load_config, serialize, validate_training
 
 
 def make_env(robot, config):
@@ -35,12 +36,11 @@ def main():
     for arg, key in ((args.steps, "total_timesteps"), (args.device, "device"), (args.envs, "n_envs")):
         if arg is not None:
             training[key] = arg
+    try:
+        validate_training(training)
+    except ValueError as exc:
+        p.error(str(exc))
     n_envs = training.get("n_envs", 1)
-    if n_envs < 1 or training.get("total_timesteps", 1) < 1:
-        p.error("Worker and transition counts must be positive")
-    n_steps, batch = training.get("n_steps", 512), training.get("batch_size", 128)
-    if n_steps < 1 or batch < 2 or n_steps*n_envs < 2 or (n_steps*n_envs) % batch:
-        p.error("Rollout size must be >1 and divisible by batch_size")
     for key in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS"):
         os.environ[key] = "1"
     os.environ["MPLBACKEND"] = "Agg"
@@ -53,15 +53,15 @@ def main():
         device_info = check_device(device)
     except (ValueError, RuntimeError) as exc:
         p.error(str(exc))
-    from stable_baselines3 import PPO
-    from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback
-    from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+    from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecCheckNan
     torch.set_num_threads(training.get("torch_threads", 1))
     run = Path(args.run)
     if run.exists():
         p.error("Run directory exists; choose a new --run directory")
     contract = KennyEnv(robot, config).contract()
     if args.resume:
+        if not Path(args.resume).is_file():
+            p.error(f"Resume checkpoint does not exist: {args.resume}")
         source = Path(args.resume).resolve().parent
         if source.name == "checkpoints":
             source = source.parent
@@ -82,6 +82,23 @@ def main():
     cls = SubprocVecEnv if training.get("vector_backend") == "subproc" and n_envs > 1 else DummyVecEnv
     kwargs = {"start_method": "spawn"} if cls is SubprocVecEnv else {}
     env = cls([partial(make_env, robot, config) for _ in range(n_envs)], **kwargs)
+    def terminate(signum, frame):
+        raise KeyboardInterrupt
+    previous_handler = signal.signal(signal.SIGTERM, terminate)
+    try:
+        env = VecCheckNan(env, raise_exception=True)
+        train_model(robot, config, training, args, run, env, device)
+    finally:
+        signal.signal(signal.SIGTERM, previous_handler)
+        env.close()
+
+
+def train_model(robot, config, training, args, run, env, device):
+    """Fit using an environment whose owner closes it even if setup fails."""
+    from stable_baselines3 import PPO
+    from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback
+    n_envs = training.get("n_envs", 1)
+    n_steps, batch = training.get("n_steps", 512), training.get("batch_size", 128)
     env.seed(args.seed)
     ppo_options = {key: training.get(key, default) for key, default in
                    (("learning_rate", 3e-4), ("gamma", .99), ("gae_lambda", .95),
@@ -173,6 +190,11 @@ def main():
             self.last = self.num_timesteps
             self._evaluate()
             return True
+        def _on_training_end(self):
+            # Step callbacks run before PPO updates. Even an evaluation at the
+            # final rollout boundary has not scored the final policy yet.
+            self._evaluate()
+            self.logger.dump(step=self.num_timesteps)
     checkpoint = CheckpointCallback(save_freq=max(1, training.get("checkpoint_freq", 25000)//n_envs),
                                     save_path=str(run/"checkpoints"), name_prefix="ppo")
     try:
@@ -182,8 +204,7 @@ def main():
     except KeyboardInterrupt:
         model.save(run/"interrupted")
         print("Saved interrupted.zip; resume into a new run directory.")
-    finally:
-        env.close()
+        raise SystemExit(130)
 
 
 if __name__ == "__main__":

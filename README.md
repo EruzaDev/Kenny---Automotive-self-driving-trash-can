@@ -114,10 +114,25 @@ Runs contain:
 
 - `final.zip`, periodic `checkpoints/`, and `best.zip` after the first validation.
 - `config.json`, `contract.json`, dependency versions, seed and source hashes.
-- `validation.jsonl` with per-episode results and aggregate metrics.
+- `validation.jsonl` with per-episode results and aggregate metrics before training,
+  periodically during training, and after the final PPO update. The final record
+  can share a timestep count with a periodic record scored before that update.
 - TensorBoard events, viewable with `tensorboard --logdir runs`.
 
-`best.zip` uses observed collision/cliff rates first, then success and intervention fraction. Small validation samples are noisy; inspect records before selecting a release candidate. Ctrl+C saves `interrupted.zip`. Existing run directories are rejected to avoid overwriting experiments. Resume rejects changed robot/observation contracts; start fresh after changing physical dimensions or sensor feature layout.
+`best.zip` ranks success first, then observed collision/cliff rates, intervention
+fraction and reward. Dual validation selects by performance in both guarded and
+unshielded modes and retains a separate `best_guarded.zip`. Small validation
+samples are noisy; inspect records before selecting a release candidate.
+Ctrl+C or SIGTERM during PPO training saves `interrupted.zip` and exits with
+status 130. Existing run directories are rejected to avoid overwriting
+experiments. Resume rejects changed robot/observation contracts; start fresh
+after changing physical dimensions or sensor feature layout.
+
+Training settings are checked before workers start; unknown settings, invalid
+counts and nonfinite values are rejected. Nonfinite observations, actions or
+rewards abort training rather than silently propagating through PPO. Behavior
+cloning keeps demonstrations in CPU memory and transfers each minibatch to the
+training device.
 
 ## Evaluate new layouts and dynamic changes
 
