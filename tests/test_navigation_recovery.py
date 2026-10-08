@@ -237,7 +237,9 @@ def test_episode_diagnostics_reset_and_count_no_route_separately():
     env.reset(seed=1)
     env.route = np.empty((0, 2))
     _, _, _, _, info = env.step([1., 0.])
-    assert info["no_route_steps"] == 1
+    # A route that was cleared accidentally is restored before the next action,
+    # so recovery does not spend a control tick stalled.
+    assert info["no_route_steps"] == 0
     assert info["interventions"] == 0
     _, info = env.reset(seed=1)
     assert info["no_route_steps"] == 0 and info["intervention_reasons"] == {}

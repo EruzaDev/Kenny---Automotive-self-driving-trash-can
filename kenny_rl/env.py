@@ -34,9 +34,10 @@ MAX_PEDESTRIAN_SPEED = .8
 class KennyEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 10}
 
-    def __init__(self, robot=None, config=None, render_mode=None):
+    def __init__(self, robot=None, config=None, render_mode=None, environment=None):
         super().__init__()
         self.robot, self.config = robot or RobotConfig(), config or EnvConfig()
+        self.environment = environment
         if render_mode not in (None, *self.metadata["render_modes"]):
             raise ValueError("Unsupported render mode")
         self.render_mode = render_mode
@@ -72,14 +73,18 @@ class KennyEnv(gym.Env):
         options = options or {}
         if set(options) - {"start", "goal", "heading"}:
             raise ValueError("Supported reset options: start, goal, heading")
-        self.world = generate_world(self.np_random, self.config, self.robot)
+        if self.environment is None:
+            self.world = generate_world(self.np_random, self.config, self.robot)
+        else:
+            from .environment import load_environment
+            self.world = load_environment(self.environment, self.robot)
         for name in ("start", "goal"):
             if name not in options:
                 continue
             point = np.asarray(options[name], dtype=float)
             if (point.shape != (2,) or not np.isfinite(point).all() or
                     np.any(point <= self.robot.radius) or
-                    np.any(point >= self.world.size-self.robot.radius) or
+                    np.any(point >= np.asarray([self.world.width, self.world.height])-self.robot.radius) or
                     circle_boxes(point, self.robot.radius+.05, self.world.all_boxes(), self.robot.height) or
                     circle_rects(point, self.robot.radius+.05, self.world.cliffs)):
                 raise ValueError(f"{name} must be a finite, collision-free x/y point inside the room")
@@ -113,11 +118,18 @@ class KennyEnv(gym.Env):
         self.outages = {"lidar": 0, "depth": 0}
         self.commands = deque([np.array([-1., 0.]) for _ in range(self.delay)])
         self.dropout = self.config.dropout * (2 if self.config.split == "stress" else 1)
-        self.planner = GridPlanner(self.world.size, self.config.grid_resolution, self.robot.radius,
+        self.planner = GridPlanner([self.world.width, self.world.height], self.config.grid_resolution, self.robot.radius,
                                    progressive=self.config.map_mode == "progressive",
                                    clearance_weight=self.config.route_clearance_weight)
         if self.config.map_mode == "known":
-            self.planner.set_walls(self.world.boxes[np.array(self.world.kinds) == "wall"])
+            if self.environment is None:
+                self.planner.set_walls(self.world.boxes[np.array(self.world.kinds) == "wall"])
+            else:
+                solids = self.world.boxes[(self.world.boxes[:, 2] < self.robot.height) & (self.world.boxes[:, 5] > 0)]
+                if len(self.world.cliffs):
+                    cliffs = self.world.cliffs
+                    solids = np.concatenate((solids, np.column_stack((cliffs[:, :2], np.zeros(len(cliffs)), cliffs[:, 2:], np.ones(len(cliffs))))))
+                self.planner.set_walls(solids)
         self.route = np.empty((0, 2))
         self.last_lidar_step = -100
         self._sense(force=True)
@@ -250,7 +262,7 @@ class KennyEnv(gym.Env):
                   self.depth.ranges/r.camera_range, self.depth.valid,
                   self.floor.ranges/r.camera_range, self.floor.valid,
                   self.down_hazard, self.down_valid, points.ravel()/3., valid,
-                  self._local(self.world.goal[None])[0]/self.world.size,
+                  self._local(self.world.goal[None])[0]/np.asarray([self.world.width, self.world.height]),
                   self.measured_velocity/np.array([r.max_speed, r.max_turn_rate]),
                   self.requested, self.executed,
                   [self.uncertainty/.5, min(self.marker_age*self.config.dt/30., 1), float(self.uncertainty < .35)],
@@ -349,6 +361,11 @@ class KennyEnv(gym.Env):
         delayed = self.commands.popleft()
         target = np.array([(delayed[0]+1)/2*r.max_speed, delayed[1]*r.max_turn_rate])
         if not len(self.route):
+            # A fresh scan may already have opened a route. Replan before
+            # stopping, and then retry after every sensing cycle below; this
+            # avoids ten control ticks of needless stalling behind moving people.
+            self._replan()
+        if not len(self.route):
             target[:] = 0  # no blind recovery motion
             self.no_route_steps += 1
         previously_intervened = self.intervened
@@ -392,7 +409,7 @@ class KennyEnv(gym.Env):
                 event = "cliff"; break
         self.path_length += float(np.linalg.norm(self.pose[:2]-start))
         self.steps += 1
-        if self.config.stage in ("dynamic", "full") and self.steps % 200 == 0:
+        if self.environment is None and self.config.stage in ("dynamic", "full") and self.steps % 200 == 0:
             self.clutter_changes += int(self.world.change_clutter(self.np_random, self.pose, r))
         self.marker_age += 1
         self.estimate[2] = wrap_angle(self.estimate[2]+self.measured_velocity[1]*c.dt)
@@ -406,7 +423,10 @@ class KennyEnv(gym.Env):
             self.estimate[2] = wrap_angle(self.estimate[2])
             self.uncertainty, self.marker_age = .02, 0
         self._sense()
-        replanned = self.steps % 10 == 0
+        # Replan at 0.3 s cadence: quick enough to choose a new passing route
+        # around walkers, but not on every physics substep.
+        replan_interval = max(1, round(.3/c.dt))
+        replanned = self.steps % replan_interval == 0 or not len(self.route)
         if replanned:
             self._replan()
         remaining = self._remaining()
@@ -419,7 +439,7 @@ class KennyEnv(gym.Env):
         # progress, or standing still becomes PPO's easiest local optimum.
         reward = 5*progress-.01-.002*float(np.square(self.requested-previous_action).sum())
         goal_distance = float(np.linalg.norm(self.estimate[:2]-self.world.goal))
-        if goal_distance < .40:
+        if goal_distance < .80:
             # No recurring positive reward for lingering near the destination.
             # Approach at a useful walking-creep speed, then brake inside the
             # arrival region. This is shaping, never a minimum-speed command:
@@ -450,9 +470,17 @@ class KennyEnv(gym.Env):
         return self._observation(), float(reward), terminated, truncated, self._info(event)
 
     def approach_speed(self, distance):
+        """Maximum speed that can still settle inside the arrival radius.
+
+        This uses the conservative episode acceleration bound.  Unlike the
+        old fixed 0.20 m stop point, it reserves the full success radius, so a
+        policy can hold cruising speed until physics says braking is needed.
+        """
         braking = self.robot.acceleration*min(self.config.acceleration_scale_range[0], 1.)
+        terminal_speed = .05
+        stopping_distance = max(0., distance-ARRIVAL_RADIUS)
         return float(min(self.robot.max_speed,
-                         np.sqrt(2*braking*max(0., distance-.20))))
+                         np.sqrt(terminal_speed**2 + 2*braking*stopping_distance)))
 
     def _info(self, event):
         return {"event": event, "is_success": event == "success", "steps": self.steps,

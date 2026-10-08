@@ -181,6 +181,18 @@ def test_cooperative_people_avoid_robot_but_stress_people_remain_adversarial():
     assert adversarial.people[0, 0] > 1.
 
 
+def test_cooperative_pedestrians_use_a_side_step_and_queue_single_file():
+    world = scene()
+    world.people = np.array([[1., 1., 1., 0., .23], [1., 1.2, 1., 0., .23]])
+    world.move_people(.1, np.random.default_rng(0), robot_position=[1.4, 1.],
+                      robot_radius=.16, cooperative=True)
+
+    # The lead pedestrian keeps a right-side lateral component instead of
+    # reversing directly at Kenny; the second yields behind, not alongside.
+    assert world.people[0, 1] < 1.
+    assert world.people[1, 0] < 1.
+
+
 def test_collision_info_identifies_object_and_contact_motion():
     env = KennyEnv(config=EnvConfig(stage="empty", shield=False,
                                     domain_randomization=False, dropout=0.,

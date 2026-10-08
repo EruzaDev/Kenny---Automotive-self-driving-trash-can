@@ -15,8 +15,6 @@ def route_action(env):
     heading = np.arctan2(point[1], point[0])
     goal_distance = np.linalg.norm(env.world.goal-env.estimate[:2])
     speed = env.approach_speed(goal_distance) * max(0., np.cos(heading))
-    if goal_distance < .23:
-        return np.array([-1., 0.], dtype=np.float32)
     return np.array([2*speed/env.robot.max_speed-1, np.clip(2*heading/env.robot.max_turn_rate, -1, 1)], dtype=np.float32)
 
 
@@ -28,6 +26,7 @@ def main():
     p.add_argument("--steps", type=int, default=500)
     p.add_argument("--snapshot", help="Save one PNG without opening a window")
     p.add_argument("--model")
+    p.add_argument("--environment", help="Editor environment.json (start/goal overrides use local map coordinates)")
     p.add_argument("--map-mode", choices=["known", "progressive"])
     p.add_argument("--start", nargs=2, type=float, metavar=("X", "Y"))
     p.add_argument("--goal", nargs=2, type=float, metavar=("X", "Y"))
@@ -40,7 +39,7 @@ def main():
         robot, config, _ = load_config(source/"config.json")
     env = KennyEnv(robot, replace(config, stage=args.stage, split="test",
                                  map_mode=args.map_mode or config.map_mode),
-                   render_mode="rgb_array" if args.snapshot else "human")
+                   render_mode="rgb_array" if args.snapshot else "human", environment=args.environment)
     options = {k: v for k, v in {"start": args.start, "goal": args.goal}.items() if v is not None}
     obs, _ = env.reset(seed=args.seed, options=options)
     try:

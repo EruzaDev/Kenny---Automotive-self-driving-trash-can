@@ -13,7 +13,7 @@ def render(env):
         # Gray is unseen space. Underlying geometry is simulator debug truth,
         # never input to mapping or the policy.
         unknown = np.ma.masked_where(env.planner.known.T, np.ones_like(env.planner.known.T))
-        ax.imshow(unknown, origin="lower", extent=(0, env.world.size, 0, env.world.size),
+        ax.imshow(unknown, origin="lower", extent=(0, env.world.width, 0, env.world.height),
                   cmap="Greys", vmin=0, vmax=1, alpha=.25, zorder=3)
     colors = {"wall": "#657786", "bag": "#bc7b40", "overhang": "#a970d6",
               "chair_seat": "#39a7a0", "chair_leg": "#195652", "chair_back": "#26877f"}
@@ -32,7 +32,7 @@ def render(env):
     ax.arrow(*env.pose[:2], .5*np.cos(env.pose[2]), .5*np.sin(env.pose[2]), width=.025, color="#153958")
     ax.plot(*env.estimate[:2], "r+", label="estimated position")
     ax.plot(*env.world.goal, "g*", markersize=16, label="goal")
-    ax.set(xlim=(0, env.world.size), ylim=(0, env.world.size), aspect="equal", xlabel="x (m)", ylabel="y (m)",
+    ax.set(xlim=(0, env.world.width), ylim=(0, env.world.height), aspect="equal", xlabel="x (m)", ylabel="y (m)",
            title=f"KENNY | {env.config.stage} / {env.config.map_mode} / {env.planner.navigation_mode} | step {env.steps} | stops {env.interventions}")
     ax.legend(loc="upper right", fontsize=7)
     env.figure.canvas.draw()

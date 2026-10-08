@@ -5,13 +5,17 @@ import numpy as np
 
 class GridPlanner:
     def __init__(self, size, resolution, radius, progressive=False, clearance_weight=0.):
-        self.size, self.resolution, self.radius = size, resolution, radius
-        self.n = int(np.ceil(size / resolution))
-        self.static = np.zeros((self.n, self.n), dtype=bool)
-        self.expires = np.zeros((self.n, self.n), dtype=np.int32)
+        self.size = np.broadcast_to(np.asarray(size, dtype=float), (2,)).copy()
+        self.resolution, self.radius = resolution, radius
+        self.shape = tuple(np.ceil(self.size / resolution).astype(int))
+        # Retain the scalar attribute used by callers of square planners.
+        # Rectangular callers should use shape for the two independent axes.
+        self.n = self.shape[0] if self.shape[0] == self.shape[1] else np.asarray(self.shape)
+        self.static = np.zeros(self.shape, dtype=bool)
+        self.expires = np.zeros(self.shape, dtype=np.int32)
         self.progressive = progressive
-        self.known = np.full((self.n, self.n), not progressive, dtype=bool)
-        self.occupied = np.zeros((self.n, self.n), dtype=bool)
+        self.known = np.full(self.shape, not progressive, dtype=bool)
+        self.occupied = np.zeros(self.shape, dtype=bool)
         self.exploration_target = None
         self.navigation_mode = "goal"
         self.clearance_weight = clearance_weight
@@ -31,14 +35,14 @@ class GridPlanner:
                                  if np.hypot(x, y) * resolution <= observed_margin], dtype=int)
 
     def cell(self, point):
-        return tuple(np.clip(np.asarray(point) / self.resolution, 0, self.n - 1).astype(int))
+        return tuple(np.clip(np.asarray(point) / self.resolution, 0, np.asarray(self.shape) - 1).astype(int))
 
     def point(self, cell):
         return (np.asarray(cell) + .5) * self.resolution
 
     def set_walls(self, boxes):
-        x, y = np.meshgrid((np.arange(self.n) + .5) * self.resolution,
-                           (np.arange(self.n) + .5) * self.resolution, indexing="ij")
+        x, y = np.meshgrid((np.arange(self.shape[0]) + .5) * self.resolution,
+                           (np.arange(self.shape[1]) + .5) * self.resolution, indexing="ij")
         self.static[:] = False
         margin = self.radius + .04
         for b in boxes:
@@ -54,11 +58,11 @@ class GridPlanner:
             # incorrectly close valid doorways. Unknown obstacle endpoints land
             # outside the static mask and still enter temporary memory.
             lo = np.maximum(np.asarray(cell)-1, 0)
-            hi = np.minimum(np.asarray(cell)+2, self.n)
+            hi = np.minimum(np.asarray(cell)+2, self.shape)
             if self.static[lo[0]:hi[0], lo[1]:hi[1]].any():
                 continue
             cells = np.asarray(cell) + self.offsets
-            cells = cells[np.all((cells >= 0) & (cells < self.n), axis=1)]
+            cells = cells[np.all((cells >= 0) & (cells < self.shape), axis=1)]
             self.expires[cells[:, 0], cells[:, 1]] = np.maximum(
                 self.expires[cells[:, 0], cells[:, 1]], step + ttl)
 
@@ -80,7 +84,7 @@ class GridPlanner:
             direction = np.array([np.cos(angle+heading), np.sin(angle+heading)])
             points = np.asarray(origin) + samples[:, None]*direction
             cells = np.floor(points/self.resolution).astype(int)
-            cells = cells[np.all((cells >= 0) & (cells < self.n), axis=1)]
+            cells = cells[np.all((cells >= 0) & (cells < self.shape), axis=1)]
             self.known[cells[:, 0], cells[:, 1]] = True
             self.occupied[cells[:, 0], cells[:, 1]] = False
             if hit:
@@ -97,7 +101,7 @@ class GridPlanner:
         if self.progressive:
             for cell in np.argwhere(self.occupied):
                 cells = cell + self.offsets
-                cells = cells[np.all((cells >= 0) & (cells < self.n), axis=1)]
+                cells = cells[np.all((cells >= 0) & (cells < self.shape), axis=1)]
                 blocked[cells[:, 0], cells[:, 1]] = True
         return blocked
 
@@ -192,7 +196,7 @@ class GridPlanner:
         for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1),
                        (1, 1), (1, -1), (-1, 1), (-1, -1)):
             nxt = current[0]+dx, current[1]+dy
-            if not (0 <= nxt[0] < self.n and 0 <= nxt[1] < self.n) or blocked[nxt]:
+            if not (0 <= nxt[0] < self.shape[0] and 0 <= nxt[1] < self.shape[1]) or blocked[nxt]:
                 continue
             if dx and dy and (blocked[current[0]+dx, current[1]] or
                               blocked[current[0], current[1]+dy]):
@@ -240,7 +244,7 @@ class GridPlanner:
             grown = np.zeros_like(blocked)
             for x in range(3):
                 for y in range(3):
-                    grown |= padded[x:x+self.n, y:y+self.n]
+                    grown |= padded[x:x+self.shape[0], y:y+self.shape[1]]
             penalty[grown & ~expanded] = scale*self.clearance_weight
             expanded = grown
         return penalty

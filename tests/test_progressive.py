@@ -64,9 +64,11 @@ def test_progressive_finetune_preserves_policy_contract():
 def test_arrival_profile_slows_without_crawling_outside_goal_radius():
     env = KennyEnv()
     assert env.approach_speed(.4) == env.robot.max_speed
-    assert env.approach_speed(.26) > .1
+    assert env.approach_speed(.26) > .05
     assert 0 < env.approach_speed(.21) < env.approach_speed(.26)
-    assert env.approach_speed(.19) == 0
+    # Keep a small terminal speed inside the arrival radius; the robot should
+    # not brake to a stop before reaching the goal.
+    assert env.approach_speed(.19) == .05
 
 
 def test_stationary_robot_outside_arrival_does_not_earn_lingering_reward():

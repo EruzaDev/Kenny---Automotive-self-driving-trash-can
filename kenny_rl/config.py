@@ -61,6 +61,10 @@ class EnvConfig:
     stage: str = "full"
     split: str = "train"
     world_size: float = 12.0
+    # Optional axes for non-square generated rooms.  When omitted, world_size
+    # remains the side length for backwards-compatible square environments.
+    world_width: float | None = None
+    world_height: float | None = None
     dt: float = 0.1
     max_steps: int = 1200
     grid_resolution: float = 0.25
@@ -100,7 +104,10 @@ class EnvConfig:
             raise ValueError("Unknown curriculum stage")
         if self.split not in ("train", "validation", "test", "stress"):
             raise ValueError("Unknown split")
-        if self.world_size < 5 or self.dt <= 0 or self.max_steps < 1:
+        if (self.world_size < 5 or
+                (self.world_width is not None and self.world_width < 5) or
+                (self.world_height is not None and self.world_height < 5) or
+                self.dt <= 0 or self.max_steps < 1):
             raise ValueError("Invalid world size, dt or episode length")
         if self.sensor_noise < 0:
             raise ValueError("sensor_noise must be nonnegative")

@@ -8,12 +8,12 @@ from .config import load_config
 from .env import KennyEnv
 
 
-def evaluate_model(model, robot, config, episodes, seed=20000, progress_every=0):
+def evaluate_model(model, robot, config, episodes, seed=20000, progress_every=0, environment=None):
     if episodes < 1:
         raise ValueError("episodes must be positive")
     if progress_every < 0:
         raise ValueError("progress_every must be nonnegative")
-    env = KennyEnv(robot, config)
+    env = KennyEnv(robot, config, environment=environment)
     records = []
     try:
         for i in range(episodes):
@@ -67,6 +67,7 @@ def evaluate_model(model, robot, config, episodes, seed=20000, progress_every=0)
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--model", required=True)
+    p.add_argument("--environment", help="Editor environment.json")
     p.add_argument("--episodes", type=int, default=30)
     p.add_argument("--seed", type=int, default=20000)
     p.add_argument("--split", choices=["validation", "test", "stress"], default="test")
@@ -102,7 +103,7 @@ def main():
     model = PPO.load(args.model, device="cpu")
     if args.progress_every < 0:
         p.error("--progress-every must be nonnegative")
-    result = evaluate_model(model, robot, config, args.episodes, args.seed, args.progress_every)
+    result = evaluate_model(model, robot, config, args.episodes, args.seed, args.progress_every, args.environment)
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2))

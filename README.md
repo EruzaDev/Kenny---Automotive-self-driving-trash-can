@@ -96,6 +96,18 @@ Proceed through these stages, retaining and evaluating earlier checkpoints:
 
 All stages randomize positions and start/goal headings. Full worlds vary in size, layout, obstacle combinations, motor gain, slip, command delay and acceleration response. Sensor noise/dropouts and marker occlusion remain active. The curriculum is **manual**, not an automatic stage scheduler; evaluate simpler stages again to catch forgetting. Three or more independent training seeds are recommended.
 
+For the requested larger layouts, train separate policies (or fine-tune sequentially) with the included configurations:
+
+```bash
+# 21 m × 21 m square
+python -m kenny_rl.train --config configs/server_21x21.json --run runs/full-21x21-0 --seed 0
+
+# 21 m × 10 m rectangle
+python -m kenny_rl.train --config configs/server_21x10.json --run runs/full-21x10-0 --seed 0
+```
+
+`world_width` and `world_height` set the generated room axes. They default to `world_size` when absent, so older square configurations still behave unchanged. The size randomization is applied uniformly to both axes, preserving the room's aspect ratio.
+
 Runs contain:
 
 - `final.zip`, periodic `checkpoints/`, and `best.zip` after the first validation.
@@ -196,3 +208,7 @@ Important fidelity limits:
 - No ROS node or ONNX exporter is included yet. A ROS adapter must reproduce `contract.json`, frame ordering, sensor calibration, fixed normalization and action scaling, then pass Gazebo and hardware timing/safety tests.
 
 See [the simulator design and validation notes](docs/LIGHTWEIGHT_SIMULATOR.md) for the observation contract, reward and measured checks.
+
+## Measured environment maps
+
+The sibling [Kenny Environment Studio](../kenny-map-editor/README.md) can create measured maps, place ArUco landmarks and obstacles, and capture ROS scan maps. Load an exported `environment.json` with `python -m kenny_rl.demo --environment /path/environment.json`, or pass `--environment` to evaluation. Rectangular maps retain their actual width and height. Exported maps use ROS world coordinates; demo start/goal overrides use simulator coordinates after transforming by the inverse grid origin. The original map origin and full marker metadata remain available on the loaded world.
