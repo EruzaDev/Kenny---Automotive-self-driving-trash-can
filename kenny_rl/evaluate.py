@@ -38,6 +38,7 @@ def evaluate_model(model, robot, config, episodes, seed=20000, progress_every=0,
     total_steps = sum(r["steps"] for r in records)
     reasons = sorted({key for r in records for key in r["intervention_reasons"]})
     return {"episodes": episodes, "split": config.split, "stage": config.stage,
+            "recovery_enabled": config.recovery_enabled,
             "map_mode": config.map_mode,
             "grid_resolution": config.grid_resolution,
             "route_clearance_weight": config.route_clearance_weight,

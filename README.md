@@ -292,8 +292,12 @@ Floor and downward-sensor interlocks remain active. Recovery is off by default;
 it changes the controller behavior and needs paired held-out evaluation before
 being enabled for training or deployment.
 
-Guarded turns now wait until measured translation is below 0.01 m/s, and
-recovery mode limits simultaneous translation and turning to 0.20 rad/s.
+Guarded turns wait until measured translation is below 0.01 m/s. Recovery
+remembers depth returns for 15 seconds for local braking, and
+limits forward speed using their clearance, braking distance, sensor latency,
+and localization uncertainty. Open-space turns use the usual 0.55 rad/s
+turn-before-translate threshold. The blanket recovery threshold of 0.20 rad/s
+was removed after it reduced held-out success from 81% to 76%.
 The original 100-episode recovery experiment introduced a bag collision on
 seed 20042. The revised controller avoids that reproduced contact, but still
 times out on that seed; completion and safety must be reassessed on all 100
@@ -309,5 +313,8 @@ The initial four-case comparison recovered seeds 20001 and 20017 with no
 collisions, but 20018 and 20037 still timed out. This targeted sample does not
 establish an overall success or safety improvement. Test the same 100-episode
 set using `--recovery` and compare it with the baseline before selecting it.
+The clearance-memory revision was checked on seeds 20042, 20017, 20001 and
+20002: 20001 and 20002 succeeded; 20042 and 20017 timed out, with no collisions.
+This also shows that the earlier success on 20017 did not survive the revision.
 
 The sibling [Kenny Environment Studio](../kenny-map-editor/README.md) can create measured maps, place ArUco landmarks and obstacles, and capture ROS scan maps. Load an exported `environment.json` with `python -m kenny_rl.demo --environment /path/environment.json`, or pass `--environment` to evaluation. Rectangular maps retain their actual width and height. Exported maps use ROS world coordinates; demo start/goal overrides use simulator coordinates after transforming by the inverse grid origin. The original map origin and full marker metadata remain available on the loaded world.

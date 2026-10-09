@@ -21,7 +21,7 @@ FEATURES = [("lidar_range", 72), ("lidar_valid", 72),
             ("localization_health", 3), ("sensor_age_and_guard", 3)]
 FRAME_SIZE = sum(n for _, n in FEATURES)
 SCHEMA_VERSION = "kenny-geometric-v3"
-OBSTACLE_REASONS = {"lidar_obstacle", "depth_obstacle", "floor_hazard", "downward_hazard"}
+OBSTACLE_REASONS = {"lidar_obstacle", "depth_obstacle", "depth_memory_obstacle", "floor_hazard", "downward_hazard"}
 FULL_STOP_REASONS = {"downward_hazard", "downward_invalid", "floor_hazard", "floor_invalid"}
 ARRIVAL_RADIUS = .25
 ROUTE_LOOKAHEAD_DISTANCES = np.array([.5, 1., 2.])
@@ -104,6 +104,7 @@ class KennyEnv(gym.Env):
         self.no_route_steps = 0
         self.stalled_steps = 0
         self.recovery_steps = 0
+        self.depth_memory = {}
         self.path_length = 0.
         self.clutter_changes = 0
         self.collision_source = None
@@ -184,6 +185,17 @@ class KennyEnv(gym.Env):
             angle = scan.angles[scan.hits]+acquisition[2]
             points = acquisition[:2] + scan.ranges[scan.hits, None]*np.column_stack((np.cos(angle), np.sin(angle)))
             self.planner.observe(points, self.steps)
+            if c.recovery_enabled and scan is self.depth:
+                # Keep observed low obstacles when a turn takes them out of
+                # the forward camera. Quantization bounds duplicate returns;
+                # finite lifetime also permits moving clutter to clear.
+                for point in points:
+                    if self.planner.static[self.planner.cell(point)]:
+                        continue  # supplied walls already have planner clearance
+                    self.depth_memory[tuple(np.round(point/.05).astype(int))] = (point.copy(), self.steps)
+                memory_steps = max(1, round(15./c.dt))
+                self.depth_memory = {key: value for key, value in self.depth_memory.items()
+                                     if self.steps-value[1] < memory_steps}
         angle = self.floor.angles[self.floor.hits] + self.estimate[2]
         points = self.estimate[:2] + self.floor.ranges[self.floor.hits, None]*np.column_stack((np.cos(angle), np.sin(angle)))
         self.planner.observe(points, self.steps, ttl=10000)
@@ -278,6 +290,26 @@ class KennyEnv(gym.Env):
         """Stop using sensor evidence only, never a simulator collision query."""
         self.guard_reasons = ()
         r, c = self.robot, self.config
+        clearance_limited = False
+        if c.recovery_enabled and self.shield_active and target[0] > 0 and self.depth_memory:
+            points = self._local(np.asarray([value[0] for value in self.depth_memory.values()]))
+            # Conservative corridor includes lateral drift during a curved
+            # braking approach. Only sensor-observed points enter this limit.
+            radius = r.radius + DEPTH_OBSTACLE_BUFFER + 2*c.sensor_noise + self.uncertainty
+            yaw = max(abs(target[1]), abs(self.measured_velocity[1]))
+            radius += max(target[0], abs(self.measured_velocity[0]))*yaw*.5
+            relevant = (points[:, 0] > 0) & (np.abs(points[:, 1]) < radius)
+            if np.any(relevant):
+                p = points[relevant]
+                distance = float(np.min(p[:, 0]-np.sqrt(np.maximum(0., radius**2-p[:, 1]**2))))
+                braking = r.acceleration*min(c.acceleration_scale_range[0], 1.)
+                latency = c.dt + 1/r.lidar_hz
+                allowed = max(0., np.sqrt((braking*latency)**2 +
+                                         2*braking*max(0., distance))-braking*latency)
+                if allowed < target[0]:
+                    target = target.copy()
+                    target[0] = allowed
+                    clearance_limited = True
         speed = max(abs(self.velocity[0]), abs(target[0]))
         # Use a configured lower bound, never the hidden episode dynamics.
         braking = speed**2/(2*r.acceleration*min(c.acceleration_scale_range[0], 1.))
@@ -294,7 +326,7 @@ class KennyEnv(gym.Env):
             planar_margin += MAX_PEDESTRIAN_SPEED*(c.dt + 1/r.lidar_hz)
             depth_margin += MAX_PEDESTRIAN_SPEED*(2*c.dt)
         moving = target[0] > 0 or abs(target[1]) > 0
-        reasons = []
+        reasons = ['depth_memory_obstacle'] if clearance_limited and target[0] <= .001 else []
         if np.any(self.down_hazard):
             reasons.append("downward_hazard")
         if not np.all(self.down_valid):
@@ -315,12 +347,8 @@ class KennyEnv(gym.Env):
         # the circular body into a height obstacle that never entered the
         # Astra's forward field of view.  Turn in place first so the camera
         # observes the intended direction before forward motion resumes.
-        # Recovery can leave the forward camera facing away from the old
-        # approach. Use smaller arcs on that controller, so low obstacles must
-        # enter the camera view before translation resumes.
-        turn_limit = .20 if c.recovery_enabled else TRANSLATION_TURN_RATE_LIMIT
         if (target[0] > 0 and
-                max(abs(self.velocity[1]), abs(target[1])) > turn_limit):
+                max(abs(self.velocity[1]), abs(target[1])) > TRANSLATION_TURN_RATE_LIMIT):
             reasons.append("turning_fast")
         for name, scan in (("lidar", self.lidar), ("depth", self.depth)):
             lateral = np.abs(scan.ranges*np.sin(scan.angles))
@@ -344,6 +372,9 @@ class KennyEnv(gym.Env):
                         abs(target[1]) > 0):
                     return np.array([0., target[1]]), True
                 return np.zeros(2), True
+        if clearance_limited and self.shield_active:
+            self.guard_reasons = ('depth_memory_obstacle',)
+            return target, True
         return target, False
 
     def _collision_source(self):
