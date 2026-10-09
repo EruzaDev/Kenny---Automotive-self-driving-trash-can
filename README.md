@@ -249,6 +249,57 @@ python scripts/server_sweep.py --output runs/a5000-sweep --stage empty --dry-run
 
 The sweep starts independent runs from scratch, or continues per-seed checkpoints with `--resume-from runs/previous-sweep`. Eight workers plus one learner per GPU needs 36 CPU slots; on 32 allocated slots the launcher selects seven workers/run. Use `--cpu-budget` to specify a scheduler allocation not reflected in CPU affinity, or `--envs` for an explicit worker count. Use `--devices cpu` for sequential CPU seed experiments. Model weights are portable between CPU and CUDA. Start fresh with the v3 contract: older checkpoints are rejected because route progress, rewards and guard behavior changed.
 
+### More than four independent training jobs
+
+The default remains one learner per device. `--jobs-per-device 2` enables eight
+simultaneous learners on four GPUs; extra seeds queue and use the next free slot.
+CPU workers are budgeted across active slots, including configured Torch threads,
+and idle slots are not reserved when there are fewer seeds. Output directories
+must be new. Each seed has its own checkpoints and log; `sweep.json` records actual
+device assignments. No existing run or model is overwritten.
+
+```bash
+python scripts/server_sweep.py \
+  --config configs/server_mixed_21x21.json \
+  --output runs/mixed-21x21-eight-candidates \
+  --stage mixed --seeds 0 1 2 3 4 5 6 7 \
+  --devices cuda:0 cuda:1 cuda:2 cuda:3 \
+  --jobs-per-device 2 --cpu-budget 32 --steps 250000 --dry-run
+```
+
+Remove `--dry-run` only after reviewing the commands and allocating the resources.
+On 32 CPUs with one Torch thread per learner, this selects **three workers/run**,
+not seven. This example starts from scratch: `--resume-from` requires matching
+checkpoints for *every* requested seed, so a four-seed source cannot resume eight
+seeds. Sharing GPUs does not guarantee higher throughput; benchmark a short sweep
+in a separate output directory first and watch `nvidia-smi`, RAM, and rollout FPS.
+Do not run this alongside the existing four-job sweep on the same allocation.
+Pick candidates using validation results, then evaluate the selected candidate on
+held-out worlds; repeatedly selecting on test results makes that test set a tuning set.
+
+### Compare baseline and experimental candidate episodes
+
+Keep the original controller/report as the baseline and save the revision's
+evaluation to a separate file. Before changing the controller or retraining,
+compare full evaluation JSON files containing `records`, not pasted summaries:
+
+```bash
+python scripts/compare_evaluations.py \
+  --baseline artifacts/seed3-baseline-test.json \
+  --candidate artifacts/seed3-experimental-test.json \
+  --output artifacts/seed3-paired-comparison.json
+```
+
+Replace these input filenames with the reports you actually saved. The command
+reads both reports without changing them and refuses to overwrite any output.
+It requires matching episode seeds and evaluation settings, lists newly introduced
+timeouts, lost successes, recovered successes, persistent failures and new safety
+events, and saves intervention reasons for changed/failed episodes. Equal aggregate
+success rates can hide different failures. The model, simulator version and room
+configuration must also match for a controller-only comparison; those are not all
+encoded in older report files. Reproduce regressions on development seeds, then use
+fresh held-out seeds to confirm improvements. Keep the shield enabled on hardware.
+
 ## What generalizes, and what still needs validation
 
 For a policy with poor unshielded performance, the experimental

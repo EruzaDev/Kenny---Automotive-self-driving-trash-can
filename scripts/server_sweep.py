@@ -13,10 +13,12 @@ from dataclasses import replace
 from kenny_rl.config import load_config, validate_training
 
 
-def worker_budget(devices, requested, configured, cpu_budget=None):
-    """Reserve one CPU per learner; respect affinity and a scheduler/user cap."""
+def worker_budget(devices, requested, configured, cpu_budget=None, learner_cpus=1):
+    """Budget active slots, including each learner's configured Torch threads."""
     if not devices:
         raise ValueError("At least one device is required")
+    if type(learner_cpus) is not int or learner_cpus < 1:
+        raise ValueError("Learner CPU count must be a positive integer")
     for workers in (configured, requested):
         if workers is not None and (type(workers) is not int or workers < 1):
             raise ValueError("Worker count must be a positive integer")
@@ -26,12 +28,32 @@ def worker_budget(devices, requested, configured, cpu_budget=None):
             if int(cap) < 1:
                 raise ValueError("CPU budget must be positive")
             available = min(available, int(cap))
-    limit = (available-len(devices)) // len(devices)
+    limit = available // len(devices) - learner_cpus
     workers = min(configured, limit) if requested is None else requested
     if workers < 1 or workers > limit:
         raise ValueError(f"{available} allocated CPUs cannot support {workers} workers per run plus "
-                         f"{len(devices)} learners; request more CPUs or fewer devices/workers")
+                         f"{len(devices)} learners ({learner_cpus} CPUs each); "
+                         "request more CPUs or fewer concurrent jobs/workers")
     return workers, available
+
+
+def training_slots(devices, jobs_per_device, seed_count):
+    """Round-robin GPU slots, without budgeting slots that cannot have a job."""
+    if not devices or len(set(devices)) != len(devices):
+        raise ValueError("Devices must be nonempty and unique; use --jobs-per-device to share GPUs")
+    if type(jobs_per_device) is not int or jobs_per_device < 1:
+        raise ValueError("Jobs per device must be a positive integer")
+    if seed_count < 1:
+        raise ValueError("At least one seed is required")
+    return (list(devices) * jobs_per_device)[:seed_count]
+
+
+def take_job(pending, device):
+    """Assign the next queued seed to whichever device slot became free."""
+    index, template = pending.pop(0)
+    command = list(template)
+    command[command.index("--device") + 1] = device
+    return index, command
 
 
 def stop_process(process):
@@ -62,7 +84,9 @@ def main():
     p.add_argument("--output", required=True)
     p.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3])
     p.add_argument("--devices", nargs="+", default=[f"cuda:{i}" for i in range(4)],
-                   help="One independent seed per slot; indices respect CUDA_VISIBLE_DEVICES")
+                   help="Unique devices; indices respect CUDA_VISIBLE_DEVICES")
+    p.add_argument("--jobs-per-device", type=int, default=1,
+                   help="Concurrent independent learners per device (default: 1); shares GPU memory")
     p.add_argument("--stage", default="empty", choices=["empty", "static", "mixed", "dynamic", "cliffs", "full"])
     p.add_argument("--steps", type=int)
     p.add_argument("--envs", type=int, help="CPU workers per run; default caps config by CPU allocation")
@@ -74,10 +98,10 @@ def main():
     args = p.parse_args()
     if len(set(args.seeds)) != len(args.seeds):
         p.error("Seeds must be unique")
-    if len(args.devices) > 4:
-        p.error("At most four concurrent runs; benchmark RAM/CPU before increasing this limit")
-    if len(set(args.devices)) != len(args.devices):
-        p.error("Devices must be unique; each GPU is one training slot")
+    try:
+        slots = training_slots(args.devices, args.jobs_per_device, len(args.seeds))
+    except ValueError as exc:
+        p.error(str(exc))
     if args.steps is not None and args.steps < 1:
         p.error("Steps must be positive")
     robot, config, training = load_config(args.config)
@@ -85,7 +109,8 @@ def main():
         p.error("Training requires the train split")
     config = replace(config, stage=args.stage)
     try:
-        workers, cpus = worker_budget(args.devices, args.envs, training.get("n_envs", 1), args.cpu_budget)
+        workers, cpus = worker_budget(slots, args.envs, training.get("n_envs", 1), args.cpu_budget,
+                                     training.get("torch_threads", 1))
         effective = {**training, "n_envs": workers}
         if args.steps is not None:
             effective["total_timesteps"] = args.steps
@@ -100,7 +125,7 @@ def main():
     for i, seed in enumerate(args.seeds):
         command = [sys.executable, "-u", "-m", "kenny_rl.train", "--config", args.config,
                    "--run", str(root/f"seed_{seed}"), "--seed", str(seed), "--stage", args.stage,
-                   "--device", args.devices[i % len(args.devices)], "--envs", str(workers)]
+                   "--device", slots[i % len(slots)], "--envs", str(workers)]
         if args.steps:
             command += ["--steps", str(args.steps)]
         if args.resume_from:
@@ -114,7 +139,9 @@ def main():
                 p.error(f"Resume observation/robot contract differs: {source}")
             command += ["--resume", str(source/args.resume_checkpoint)]
         commands.append(command)
-    print(f"Headless: {len(args.devices)} slots, {workers} workers/run, {cpus} allocated CPUs", flush=True)
+    print(f"Headless: {len(slots)} concurrent slots, {workers} workers/run, {cpus} allocated CPUs", flush=True)
+    if args.jobs_per_device > 1:
+        print("Shared devices: benchmark throughput and GPU/RAM usage before a long sweep.", flush=True)
     if args.dry_run:
         import shlex
         for command in commands:
@@ -123,15 +150,17 @@ def main():
     # Preflight before launching any long jobs. Do not clear scheduler visibility.
     from kenny_rl.runtime import check_device
     try:
-        hardware = [check_device(device) for device in args.devices]
+        hardware = [check_device(device) for device in dict.fromkeys(slots)]
     except (ValueError, RuntimeError) as exc:
         p.error(str(exc))
     child_env = os.environ.copy()
     child_env.update({"MPLBACKEND": "Agg", "PYTHONUNBUFFERED": "1",
                       "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1"})
     root.mkdir(parents=True)
-    (root/"sweep.json").write_text(json.dumps({"hardware": hardware, "headless": True,
-        "cpus": cpus, "workers_per_run": workers, "commands": commands}, indent=2))
+    manifest = {"hardware": hardware, "headless": True, "cpus": cpus,
+                "workers_per_run": workers, "jobs_per_device": args.jobs_per_device,
+                "slot_devices": slots, "commands": commands, "launches": []}
+    (root/"sweep.json").write_text(json.dumps(manifest, indent=2))
     def terminate(signum, frame):
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, terminate)
@@ -139,16 +168,22 @@ def main():
     try:
         while pending or active:
             busy = {slot for _, _, _, slot in active}
-            for slot in range(len(args.devices)):
-                candidate = next((j for j, (i, _) in enumerate(pending) if i % len(args.devices) == slot), None)
-                if slot in busy or candidate is None:
+            for slot, device in enumerate(slots):
+                if slot in busy or not pending:
                     continue
-                i, command = pending.pop(candidate)
+                i, command = take_job(pending, device)
                 log = (root/f"seed_{args.seeds[i]}.log").open("w")
-                process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
-                                           start_new_session=True, env=child_env)
+                try:
+                    process = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT,
+                                               start_new_session=True, env=child_env)
+                except BaseException:
+                    log.close()
+                    raise
                 active.append((process, log, args.seeds[i], slot))
-                print(f"Started seed {args.seeds[i]} on {args.devices[slot]}", flush=True)
+                manifest["launches"].append({"seed": args.seeds[i], "device": device,
+                                              "slot": slot, "command": command})
+                (root/"sweep.json").write_text(json.dumps(manifest, indent=2))
+                print(f"Started seed {args.seeds[i]} on {device} (slot {slot})", flush=True)
             for item in active[:]:
                 process, log, seed, slot = item
                 if process.poll() is not None:
