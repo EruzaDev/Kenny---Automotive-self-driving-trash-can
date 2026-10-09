@@ -283,4 +283,24 @@ See [the simulator design and validation notes](docs/LIGHTWEIGHT_SIMULATOR.md) f
 
 ## Measured environment maps
 
+### Experimental stall recovery
+
+Pass `--recovery` to `kenny_rl.evaluate` to test stationary scan recovery with an
+existing checkpoint. After three seconds without translation, the controller
+requests a slow in-place turn to reacquire markers and observe blocked routes.
+Floor and downward-sensor interlocks remain active. Recovery is off by default;
+it changes the controller behavior and needs paired held-out evaluation before
+being enabled for training or deployment.
+
+Replay representative failures with and without recovery:
+
+```bash
+python -m scripts.review_recovery --model runs/server-mixed-21x21-reviewed/seed_3/best_guarded.zip --output artifacts/recovery-paired.json
+```
+
+The initial four-case comparison recovered seeds 20001 and 20017 with no
+collisions, but 20018 and 20037 still timed out. This targeted sample does not
+establish an overall success or safety improvement. Test the same 100-episode
+set using `--recovery` and compare it with the baseline before selecting it.
+
 The sibling [Kenny Environment Studio](../kenny-map-editor/README.md) can create measured maps, place ArUco landmarks and obstacles, and capture ROS scan maps. Load an exported `environment.json` with `python -m kenny_rl.demo --environment /path/environment.json`, or pass `--environment` to evaluation. Rectangular maps retain their actual width and height. Exported maps use ROS world coordinates; demo start/goal overrides use simulator coordinates after transforming by the inverse grid origin. The original map origin and full marker metadata remain available on the loaded world.

@@ -102,6 +102,8 @@ class KennyEnv(gym.Env):
         self.guard_reasons = ()
         self.intervention_reasons = {}
         self.no_route_steps = 0
+        self.stalled_steps = 0
+        self.recovery_steps = 0
         self.path_length = 0.
         self.clutter_changes = 0
         self.collision_source = None
@@ -360,6 +362,7 @@ class KennyEnv(gym.Env):
         self.commands.append(self.requested.copy())
         delayed = self.commands.popleft()
         target = np.array([(delayed[0]+1)/2*r.max_speed, delayed[1]*r.max_turn_rate])
+        recovering = c.recovery_enabled and self.stalled_steps >= max(1, round(3./c.dt))
         if not len(self.route):
             # A fresh scan may already have opened a route. Replan before
             # stopping, and then retry after every sensing cycle below; this
@@ -368,6 +371,11 @@ class KennyEnv(gym.Env):
         if not len(self.route):
             target[:] = 0  # no blind recovery motion
             self.no_route_steps += 1
+        if recovering:
+            # Stationary scan/marker reacquisition. No reverse or blind forward
+            # motion, and the floor/downward interlocks still apply below.
+            target = np.array([0., min(.3, r.max_turn_rate)])
+            self.recovery_steps += 1
         previously_intervened = self.intervened
         target, self.intervened = self._guard(target)
         self.interventions += int(self.intervened)
@@ -408,6 +416,15 @@ class KennyEnv(gym.Env):
             if circle_rects(self.pose[:2], r.radius, self.world.cliffs):
                 event = "cliff"; break
         self.path_length += float(np.linalg.norm(self.pose[:2]-start))
+        if np.linalg.norm(self.pose[:2]-start) < .002:
+            self.stalled_steps += 1
+        else:
+            self.stalled_steps = 0
+        if recovering and self.uncertainty < .10 and len(self.route):
+            # Give the policy another attempt after a bounded scan, rather
+            # than continuously replacing it once stopped for an obstacle.
+            if self.recovery_steps % max(1, round(2./c.dt)) == 0:
+                self.stalled_steps = 0
         self.steps += 1
         if self.environment is None and self.config.stage in ("dynamic", "full") and self.steps % 200 == 0:
             self.clutter_changes += int(self.world.change_clutter(self.np_random, self.pose, r))

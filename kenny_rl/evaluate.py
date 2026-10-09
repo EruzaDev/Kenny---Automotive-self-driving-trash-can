@@ -73,6 +73,7 @@ def main():
     p.add_argument("--split", choices=["validation", "test", "stress"], default="test")
     p.add_argument("--stage", choices=["empty", "static", "mixed", "dynamic", "cliffs", "full"])
     p.add_argument("--unshielded", action="store_true", help="Simulation-only policy ablation")
+    p.add_argument("--recovery", action="store_true", help="Enable stationary scan/marker recovery after stalls")
     p.add_argument("--map-mode", choices=["known", "progressive"])
     p.add_argument("--route-clearance-weight", type=float,
                    help="Override planner clearance cost for a controlled evaluation")
@@ -90,7 +91,8 @@ def main():
         source = source.parent
     robot, config, _ = load_config(source/"config.json")
     config = replace(config, split=args.split, shield=not args.unshielded,
-                     stage=args.stage or config.stage, map_mode=args.map_mode or config.map_mode)
+                     stage=args.stage or config.stage, map_mode=args.map_mode or config.map_mode,
+                     recovery_enabled=args.recovery or config.recovery_enabled)
     if args.route_clearance_weight is not None:
         config = replace(config, route_clearance_weight=args.route_clearance_weight)
     if args.grid_resolution is not None:
