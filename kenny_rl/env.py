@@ -104,6 +104,8 @@ class KennyEnv(gym.Env):
         self.no_route_steps = 0
         self.stalled_steps = 0
         self.recovery_steps = 0
+        self.route_recovery_ticks = 0
+        self.route_recovery_active = False
         self.depth_memory = {}
         self.path_length = 0.
         self.clutter_changes = 0
@@ -386,6 +388,32 @@ class KennyEnv(gym.Env):
                 return "person"
         return None
 
+    def _route_recovery_target(self):
+        """Bounded scan followed by route alignment, always before the shield.
+
+        Uses only estimated pose, the existing route and localization health.
+        No obstacle deletion, simulator geometry, reverse motion or guard bypass.
+        """
+        r, c = self.robot, self.config
+        self.route_recovery_ticks += 1
+        scan_ticks = max(1, round(2./c.dt))
+        cycle_ticks = max(scan_ticks + 1, round(8./c.dt))
+        phase = (self.route_recovery_ticks - 1) % cycle_ticks
+        if phase < scan_ticks or self.uncertainty > .20 or not len(self.route):
+            if abs(self.measured_velocity[0]) >= .01:
+                return np.zeros(2)
+            return np.array([0., min(.3, r.max_turn_rate)])
+        goal_distance = float(np.linalg.norm(self.world.goal-self.estimate[:2]))
+        if goal_distance < ARRIVAL_RADIUS - .05:
+            return np.zeros(2)  # settle, not circle an already reached goal
+        point = self._lookahead()[0][0]
+        angle = float(np.arctan2(point[1], point[0]))
+        yaw = float(np.clip(2*angle, -.3, .3))
+        if abs(angle) >= .25 and abs(self.measured_velocity[0]) >= .01:
+            return np.zeros(2)
+        speed = min(.12, self.approach_speed(goal_distance)) if abs(angle) < .25 else 0.
+        return np.array([speed, yaw])
+
     def step(self, action):
         if self.finished:
             raise RuntimeError("Call reset() before stepping a finished episode")
@@ -399,6 +427,11 @@ class KennyEnv(gym.Env):
         delayed = self.commands.popleft()
         target = np.array([(delayed[0]+1)/2*r.max_speed, delayed[1]*r.max_turn_rate])
         recovering = c.recovery_enabled and self.stalled_steps >= max(1, round(3./c.dt))
+        if c.route_recovery_enabled and c.recovery_enabled:
+            # Seek marker coverage before the hard uncertainty stop is reached.
+            if recovering or self.uncertainty > .20:
+                self.route_recovery_active = True
+            recovering = self.route_recovery_active
         if not len(self.route):
             # A fresh scan may already have opened a route. Replan before
             # stopping, and then retry after every sensing cycle below; this
@@ -408,10 +441,13 @@ class KennyEnv(gym.Env):
             target[:] = 0  # no blind recovery motion
             self.no_route_steps += 1
         if recovering:
-            # Stationary scan/marker reacquisition. No reverse or blind forward
-            # motion, and the floor/downward interlocks still apply below.
-            target = np.array([0., min(.3, r.max_turn_rate)
-                               if abs(self.measured_velocity[0]) < .01 else 0.])
+            # Scan/marker reacquisition, optionally followed by a bounded route
+            # attempt. No reverse/blind motion; sensor interlocks still apply.
+            if c.route_recovery_enabled:
+                target = self._route_recovery_target()
+            else:
+                target = np.array([0., min(.3, r.max_turn_rate)
+                                   if abs(self.measured_velocity[0]) < .01 else 0.])
             self.recovery_steps += 1
         previously_intervened = self.intervened
         target, self.intervened = self._guard(target)
@@ -457,7 +493,7 @@ class KennyEnv(gym.Env):
             self.stalled_steps += 1
         else:
             self.stalled_steps = 0
-        if recovering and self.uncertainty < .10 and len(self.route):
+        if recovering and self.uncertainty < .10 and len(self.route) and not c.route_recovery_enabled:
             # Give the policy another attempt after a bounded scan, rather
             # than continuously replacing it once stopped for an obstacle.
             if self.recovery_steps % max(1, round(2./c.dt)) == 0:
@@ -476,6 +512,14 @@ class KennyEnv(gym.Env):
             self.estimate = self.pose + self.np_random.normal(0, [.015, .015, .02])
             self.estimate[2] = wrap_angle(self.estimate[2])
             self.uncertainty, self.marker_age = .02, 0
+        if c.route_recovery_enabled and self.route_recovery_active:
+            # Release after a complete scan/attempt cycle, rather than use the
+            # old lifetime recovery counter and an unbounded spinning override.
+            cycle_ticks = max(1, round(8./c.dt))
+            if self.route_recovery_ticks >= cycle_ticks and self.uncertainty < .10:
+                self.route_recovery_active = False
+                self.route_recovery_ticks = 0
+                self.stalled_steps = 0
         self._sense()
         # Replan at 0.3 s cadence: quick enough to choose a new passing route
         # around walkers, but not on every physics substep.

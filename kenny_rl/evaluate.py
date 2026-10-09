@@ -39,6 +39,7 @@ def evaluate_model(model, robot, config, episodes, seed=20000, progress_every=0,
     reasons = sorted({key for r in records for key in r["intervention_reasons"]})
     return {"episodes": episodes, "split": config.split, "stage": config.stage,
             "recovery_enabled": config.recovery_enabled,
+            "route_recovery_enabled": config.route_recovery_enabled,
             "map_mode": config.map_mode,
             "grid_resolution": config.grid_resolution,
             "route_clearance_weight": config.route_clearance_weight,
@@ -75,6 +76,7 @@ def main():
     p.add_argument("--stage", choices=["empty", "static", "mixed", "dynamic", "cliffs", "full"])
     p.add_argument("--unshielded", action="store_true", help="Simulation-only policy ablation")
     p.add_argument("--recovery", action="store_true", help="Enable stationary scan/marker recovery after stalls")
+    p.add_argument("--route-recovery", action="store_true", help="Experimental bounded scan and route-aligned recovery")
     p.add_argument("--map-mode", choices=["known", "progressive"])
     p.add_argument("--route-clearance-weight", type=float,
                    help="Override planner clearance cost for a controlled evaluation")
@@ -93,7 +95,8 @@ def main():
     robot, config, _ = load_config(source/"config.json")
     config = replace(config, split=args.split, shield=not args.unshielded,
                      stage=args.stage or config.stage, map_mode=args.map_mode or config.map_mode,
-                     recovery_enabled=args.recovery or config.recovery_enabled)
+                     recovery_enabled=args.recovery or args.route_recovery or config.recovery_enabled,
+                     route_recovery_enabled=args.route_recovery or config.route_recovery_enabled)
     if args.route_clearance_weight is not None:
         config = replace(config, route_clearance_weight=args.route_clearance_weight)
     if args.grid_resolution is not None:

@@ -360,6 +360,37 @@ Replay representative failures with and without recovery:
 python -m scripts.review_recovery --model runs/server-mixed-21x21-reviewed/seed_3/best_guarded.zip --output artifacts/recovery-paired.json
 ```
 
+The separate `--route-recovery` candidate preserves the previous `--recovery`
+behavior when absent. It scans for two seconds, then attempts route alignment
+and at most 0.12 m/s forward motion for the remainder of an eight-second cycle.
+It starts scanning before localization uncertainty reaches the hard stop;
+uncertain localization, absent routes, and all existing sensor interlocks still
+prevent translation. No stale obstacle is deleted to force progress. This is an
+experimental fallback, not a replacement for validating the learned policy.
+Use a new output filename to preserve previous reports:
+
+```bash
+python scripts/review_recovery.py \
+  --model runs/server-mixed-21x21-reviewed/seed_3/best_guarded.zip \
+  --seeds 20017 20060 20074 20084 20085 20042 \
+  --recovery-only --route-recovery --snapshot-every 10 \
+  --output artifacts/seed3-route-recovery-replay.json
+
+python -m kenny_rl.evaluate \
+  --model runs/server-mixed-21x21-reviewed/seed_3/best_guarded.zip \
+  --episodes 100 --split test --stage mixed --route-recovery \
+  --output artifacts/seed3-route-recovery-test.json
+```
+
+Compare this new report with `seed3-clearance-recovery-test.json` using
+`scripts/compare_evaluations.py`. Do not select it based only on six replay seeds
+or enable it on hardware without broader safety and timing validation.
+Local replay with seed 3's reviewed `best_guarded.zip` recovered 20060, 20074,
+20084 and 20085 (1099, 1269, 529 and 686 steps), with no observed collision or
+cliff in these six cases. Seeds 20017 and 20042 still timed out. In particular,
+20017 lost valid floor coverage during its route attempt, so the interlock
+stopped it; this is not a complete fix or evidence of overall safety improvement.
+
 The initial four-case comparison recovered seeds 20001 and 20017 with no
 collisions, but 20018 and 20037 still timed out. This targeted sample does not
 establish an overall success or safety improvement. Test the same 100-episode

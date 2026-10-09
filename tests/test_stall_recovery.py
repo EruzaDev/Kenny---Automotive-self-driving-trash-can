@@ -61,3 +61,50 @@ def test_observed_clearance_caps_speed_without_blanket_turning_stop():
     env.reset(seed=1)
     assert (0, 0) not in env.depth_memory
     env.close()
+
+
+def test_route_recovery_brakes_scans_then_uses_estimated_route():
+    env = KennyEnv(config=EnvConfig(stage='empty', recovery_enabled=True,
+                                   route_recovery_enabled=True, domain_randomization=False))
+    env.reset(seed=1)
+    env.measured_velocity[:] = [.08, 0.]
+    np.testing.assert_array_equal(env._route_recovery_target(), [0., 0.])
+    env.measured_velocity[:] = 0.
+    assert env._route_recovery_target()[1] > 0
+    direction = np.array([np.cos(env.estimate[2]), np.sin(env.estimate[2])])
+    env.route = np.array([env.estimate[:2], env.estimate[:2]+direction])
+    env.route_recovery_ticks = 20
+    target = env._route_recovery_target()
+    assert 0 < target[0] <= .12
+    assert abs(target[1]) < 1e-8
+    env.measured_velocity[0] = .08
+    assert env._route_recovery_target()[0] > 0  # do not brake every moving tick
+    env.uncertainty = .36
+    assert env._route_recovery_target()[0] == 0
+    env.measured_velocity[:] = 0.
+    assert env._route_recovery_target()[0] == 0
+    env.route = np.empty((0, 2))
+    env.uncertainty = .02
+    assert env._route_recovery_target()[0] == 0
+    env.route = np.array([env.estimate[:2], env.estimate[:2]+.1*direction])
+    env.world.goal = env.estimate[:2]+.1*direction
+    np.testing.assert_array_equal(env._route_recovery_target(), [0., 0.])
+    env.reset(seed=1)
+    assert not env.route_recovery_active and env.route_recovery_ticks == 0
+    env.close()
+
+
+def test_route_recovery_cannot_bypass_floor_or_localization_guards():
+    env = KennyEnv(config=EnvConfig(stage='empty', recovery_enabled=True,
+                                   route_recovery_enabled=True, domain_randomization=False))
+    env.reset(seed=1)
+    env.uncertainty = .36
+    target, stopped = env._guard(np.array([.12, 0.]))
+    assert stopped and target[0] == 0
+    assert 'localization_uncertain' in env.guard_reasons
+    env.uncertainty = .02
+    env.down_valid[:] = False
+    target, stopped = env._guard(np.array([0., .3]))
+    assert stopped
+    np.testing.assert_array_equal(target, [0., 0.])
+    env.close()

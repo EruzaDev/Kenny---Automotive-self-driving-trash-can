@@ -69,6 +69,7 @@ class EnvConfig:
     world_width: float | None = None
     world_height: float | None = None
     recovery_enabled: bool = False
+    route_recovery_enabled: bool = False
     dt: float = 0.1
     max_steps: int = 1200
     grid_resolution: float = 0.25
