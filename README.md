@@ -292,6 +292,13 @@ Floor and downward-sensor interlocks remain active. Recovery is off by default;
 it changes the controller behavior and needs paired held-out evaluation before
 being enabled for training or deployment.
 
+Guarded turns now wait until measured translation is below 0.01 m/s, and
+recovery mode limits simultaneous translation and turning to 0.20 rad/s.
+The original 100-episode recovery experiment introduced a bag collision on
+seed 20042. The revised controller avoids that reproduced contact, but still
+times out on that seed; completion and safety must be reassessed on all 100
+episodes rather than inferred from this regression case.
+
 Replay representative failures with and without recovery:
 
 ```bash

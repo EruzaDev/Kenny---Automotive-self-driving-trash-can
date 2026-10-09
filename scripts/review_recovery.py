@@ -17,6 +17,8 @@ def main():
     parser.add_argument('--model', required=True)
     parser.add_argument('--seeds', nargs='+', type=int, default=[20018, 20037, 20001, 20017])
     parser.add_argument('--output', required=True)
+    parser.add_argument('--recovery-only', action='store_true')
+    parser.add_argument('--snapshot-every', type=int, default=300)
     args = parser.parse_args()
     source = Path(args.model).parent
     robot, config, training = load_config(source/'config.json')
@@ -27,7 +29,9 @@ def main():
     results = []
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    for recovery in (False, True):
+    if args.snapshot_every < 1:
+        parser.error('--snapshot-every must be positive')
+    for recovery in ((True,) if args.recovery_only else (False, True)):
         env = KennyEnv(robot, replace(config, split='test', recovery_enabled=recovery))
         for seed in args.seeds:
             obs, _ = env.reset(seed=seed)
@@ -35,11 +39,14 @@ def main():
             while True:
                 action, _ = model.predict(obs, deterministic=True)
                 obs, _, terminated, truncated, info = env.step(action)
-                if env.steps % 300 == 0 or terminated or truncated:
+                if env.steps % args.snapshot_every == 0 or terminated or truncated:
                     snapshots.append({'step': env.steps, 'pose': env.pose.tolist(),
                         'goal_distance': float(np.linalg.norm(env.estimate[:2]-env.world.goal)),
                         'uncertainty': env.uncertainty, 'requested': env.requested.tolist(),
                         'executed': env.executed.tolist(), 'guard': env.guard_reasons,
+                        'velocity': env.measured_velocity.tolist(),
+                        'depth_hits': [[float(a), float(d)] for a, d, hit in
+                            zip(env.depth.angles, env.depth.ranges, env.depth.hits) if hit],
                         'route_available': bool(len(env.route))})
                 if terminated or truncated:
                     break

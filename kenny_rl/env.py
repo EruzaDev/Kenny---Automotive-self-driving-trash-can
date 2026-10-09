@@ -315,8 +315,12 @@ class KennyEnv(gym.Env):
         # the circular body into a height obstacle that never entered the
         # Astra's forward field of view.  Turn in place first so the camera
         # observes the intended direction before forward motion resumes.
+        # Recovery can leave the forward camera facing away from the old
+        # approach. Use smaller arcs on that controller, so low obstacles must
+        # enter the camera view before translation resumes.
+        turn_limit = .20 if c.recovery_enabled else TRANSLATION_TURN_RATE_LIMIT
         if (target[0] > 0 and
-                max(abs(self.velocity[1]), abs(target[1])) > TRANSLATION_TURN_RATE_LIMIT):
+                max(abs(self.velocity[1]), abs(target[1])) > turn_limit):
             reasons.append("turning_fast")
         for name, scan in (("lidar", self.lidar), ("depth", self.depth)):
             lateral = np.abs(scan.ranges*np.sin(scan.angles))
@@ -336,6 +340,7 @@ class KennyEnv(gym.Env):
                 # reacquire landmarks, but never rotate through uncertain
                 # floor/cliff coverage. Translation remains clamped to zero.
                 if (not FULL_STOP_REASONS.intersection(reasons) and
+                        abs(self.measured_velocity[0]) < .01 and
                         abs(target[1]) > 0):
                     return np.array([0., target[1]]), True
                 return np.zeros(2), True
@@ -374,7 +379,8 @@ class KennyEnv(gym.Env):
         if recovering:
             # Stationary scan/marker reacquisition. No reverse or blind forward
             # motion, and the floor/downward interlocks still apply below.
-            target = np.array([0., min(.3, r.max_turn_rate)])
+            target = np.array([0., min(.3, r.max_turn_rate)
+                               if abs(self.measured_velocity[0]) < .01 else 0.])
             self.recovery_steps += 1
         previously_intervened = self.intervened
         target, self.intervened = self._guard(target)
