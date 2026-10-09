@@ -39,7 +39,9 @@ def camera_marker_ids(world, pose, robot):
     return result
 
 
-def run_replay(environment, checkpoint, steps=1200, seed=42, model=None):
+def run_replay(environment, checkpoint, steps=1200, seed=42, model=None, controller='checkpoint'):
+    if controller not in ('checkpoint', 'marker-sweep'):
+        raise ValueError('controller must be checkpoint or marker-sweep')
     if type(steps) is not int or not 1 <= steps <= 3000:
         raise ValueError('steps must be 1–3000')
     if type(seed) is not int or not 0 <= seed <= 2**32-1:
@@ -48,6 +50,8 @@ def run_replay(environment, checkpoint, steps=1200, seed=42, model=None):
     source=checkpoint.parent.parent if checkpoint.parent.name=='checkpoints' else checkpoint.parent
     robot,config,training=load_config(source/'config.json')
     config=replace(config,split='test',max_steps=steps,shield=True,train_unshielded_fraction=0.)
+    if controller == 'marker-sweep':
+        config=replace(config,recovery_enabled=True,route_recovery_enabled=True,marker_sweep_enabled=True)
     env=KennyEnv(robot,config,environment=environment)
     try:
         expected=json.loads((source/'contract.json').read_text())
@@ -96,7 +100,10 @@ def run_replay(environment, checkpoint, steps=1200, seed=42, model=None):
             if terminated or truncated:break
         return {'frames':frames,'info':info,'dt':config.dt,'seed':seed,'model':str(checkpoint),
                 'reward':reward_sum,'robot_radius':robot.radius,'robot_height':robot.height,
-                'map_mode':config.map_mode,'shield':True,
+                'map_mode':config.map_mode,'shield':True,'controller':controller,
+                'recovery_enabled':config.recovery_enabled,
+                'route_recovery_enabled':config.route_recovery_enabled,
+                'marker_sweep_enabled':config.marker_sweep_enabled,
                 'start':world(env.world.start),'goal':world(env.world.goal),
                 'destination':world(env.world.destination_position),
                 'destination_marker_id':env.world.destination_marker_id,'near_goal_threshold_m':5.}
@@ -107,11 +114,12 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--environment',required=True);p.add_argument('--model',required=True)
     p.add_argument('--steps',type=int,default=1200);p.add_argument('--seed',type=int,default=42);p.add_argument('--output',required=True)
+    p.add_argument('--controller',choices=('checkpoint','marker-sweep'),default='checkpoint')
     args=p.parse_args()
     if not 1<=args.steps<=3000:p.error('steps must be 1–3000')
     import torch
     torch.set_num_threads(1)
-    result=run_replay(args.environment,args.model,args.steps,args.seed)
+    result=run_replay(args.environment,args.model,args.steps,args.seed,controller=args.controller)
     Path(args.output).write_text(json.dumps(result,allow_nan=False))
     print(json.dumps(result['info']),flush=True)
 

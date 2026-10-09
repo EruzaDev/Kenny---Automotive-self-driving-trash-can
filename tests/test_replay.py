@@ -62,6 +62,16 @@ def test_replay_validates_limits(tmp_path):
     environment,checkpoint=setup_run(tmp_path)
     for steps in (0,3001,1.5):
         with pytest.raises(ValueError,match='steps'):run_replay(environment,checkpoint,steps=steps,model=StopPolicy())
+    with pytest.raises(ValueError,match='controller'):
+        run_replay(environment,checkpoint,model=StopPolicy(),controller='unsafe')
+
+
+def test_replay_opt_in_route_recovery_preserves_shield(tmp_path):
+    environment,checkpoint=setup_run(tmp_path)
+    candidate=run_replay(environment,checkpoint,steps=1,model=StopPolicy(),controller='marker-sweep')
+    assert candidate['controller']=='marker-sweep'
+    assert candidate['shield']
+    assert all(candidate[k] for k in ('recovery_enabled','route_recovery_enabled','marker_sweep_enabled'))
 
 
 def test_camera_highlight_respects_height_range_heading_face_and_occlusion():
