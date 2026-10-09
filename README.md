@@ -367,6 +367,20 @@ It starts scanning before localization uncertainty reaches the hard stop;
 uncertain localization, absent routes, and all existing sensor interlocks still
 prevent translation. No stale obstacle is deleted to force progress. This is an
 experimental fallback, not a replacement for validating the learned policy.
+The localization-only early look now has a **hard two-second deadline**;
+stall-triggered scan/route attempts have a **hard eight-second deadline**, even
+if no marker is found. Both enforce an eight-second retry cooldown. A failed
+early look is not rearmed by uncertainty alone: it needs a new marker correction;
+an actual stall may still trigger a bounded retry after cooldown. Returning to
+the policy never bypasses the unchanged hard localization/sensor guard. This
+fixes the previous release condition that waited indefinitely for uncertainty
+to fall below 0.10 and could keep spinning for the rest of the episode.
+In a 12-case development replay, the deadline/cooldown fix recovered five of
+the seven newly regressed seeds (20011, 20027, 20031, 20039, 20062), retained
+success on 20060, 20084 and 20085, but lost the prior recovery of 20074. Seeds
+20041, 20099 and the bag regression 20042 still timed out. No collision or cliff
+was observed in these 12 cases. This fixes the unbounded override, not all
+navigation failures; reassess the whole comparison set and fresh held-out seeds.
 Use a new output filename to preserve previous reports:
 
 ```bash
@@ -374,18 +388,19 @@ python scripts/review_recovery.py \
   --model runs/server-mixed-21x21-reviewed/seed_3/best_guarded.zip \
   --seeds 20017 20060 20074 20084 20085 20042 \
   --recovery-only --route-recovery --snapshot-every 10 \
-  --output artifacts/seed3-route-recovery-replay.json
+  --output artifacts/seed3-route-bounded-replay.json
 
 python -m kenny_rl.evaluate \
   --model runs/server-mixed-21x21-reviewed/seed_3/best_guarded.zip \
   --episodes 100 --split test --stage mixed --route-recovery \
-  --output artifacts/seed3-route-recovery-test.json
+  --output artifacts/seed3-route-bounded-test.json
 ```
 
 Compare this new report with `seed3-clearance-recovery-test.json` using
 `scripts/compare_evaluations.py`. Do not select it based only on six replay seeds
 or enable it on hardware without broader safety and timing validation.
-Local replay with seed 3's reviewed `best_guarded.zip` recovered 20060, 20074,
+Before the deadline/cooldown fix, local replay with seed 3's reviewed
+`best_guarded.zip` recovered 20060, 20074,
 20084 and 20085 (1099, 1269, 529 and 686 steps), with no observed collision or
 cliff in these six cases. Seeds 20017 and 20042 still timed out. In particular,
 20017 lost valid floor coverage during its route attempt, so the interlock

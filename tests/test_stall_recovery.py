@@ -108,3 +108,71 @@ def test_route_recovery_cannot_bypass_floor_or_localization_guards():
     assert stopped
     np.testing.assert_array_equal(target, [0., 0.])
     env.close()
+
+
+def test_failed_scan_expires_and_cannot_immediately_retrigger(monkeypatch):
+    from kenny_rl import sensors
+    env = KennyEnv(config=EnvConfig(stage='empty', recovery_enabled=True,
+        route_recovery_enabled=True, domain_randomization=False, dropout=0., sensor_noise=0.))
+    env.reset(seed=1)
+    monkeypatch.setattr(sensors, 'marker_visible', lambda *args: False)
+    env.uncertainty = .21
+    env.step([-1., 0.])
+    assert env.route_recovery_active and not env.route_recovery_scan_armed
+    assert env.route_recovery_localization_only
+    for _ in range(19):
+        env.step([-1., 0.])
+    assert not env.route_recovery_active
+    assert env.route_recovery_ticks == 0
+    assert env.uncertainty > .21  # no marker correction was manufactured
+    retry = env.route_recovery_retry_step
+    env.stalled_steps = 100
+    env.step([-1., 0.])
+    assert not env.route_recovery_active  # both triggers respect cooldown
+    env.steps = retry
+    env.stalled_steps = 0
+    env.step([-1., 0.])
+    assert not env.route_recovery_active  # stale uncertainty alone is not a retry
+    env.stalled_steps = 100
+    env.step([-1., 0.])
+    assert env.route_recovery_active  # an actual stall can trigger after cooldown
+    assert not env.route_recovery_localization_only
+    env.uncertainty = .4
+    for _ in range(79):
+        env.step([-1., 0.])
+    assert not env.route_recovery_active  # hard eight-second cap even above the guard limit
+    target, stopped = env._guard(np.array([.12, 0.]))
+    assert stopped and target[0] == 0 and 'localization_uncertain' in env.guard_reasons
+    env.reset(seed=1)
+    assert env.route_recovery_retry_step == 0 and env.route_recovery_scan_armed
+    env.close()
+
+
+def test_marker_rearms_scan_but_does_not_cancel_cooldown(monkeypatch):
+    from kenny_rl import sensors
+    env = KennyEnv(config=EnvConfig(stage='empty', recovery_enabled=True,
+        route_recovery_enabled=True, domain_randomization=False, dropout=0., sensor_noise=0.))
+    env.reset(seed=1)
+    env.route_recovery_scan_armed = False
+    env.route_recovery_retry_step = 100
+    monkeypatch.setattr(sensors, 'marker_visible', lambda *args: True)
+    env.step([-1., 0.])
+    assert env.route_recovery_scan_armed and env.uncertainty == .02
+    env.uncertainty = .21
+    env.stalled_steps = 100
+    env.step([-1., 0.])
+    assert not env.route_recovery_active
+    env.close()
+
+
+def test_recovery_mode_is_json_serializable_after_numpy_uncertainty():
+    import json
+    env = KennyEnv(config=EnvConfig(stage='empty', recovery_enabled=True,
+        route_recovery_enabled=True, domain_randomization=False))
+    env.reset(seed=1)
+    env.uncertainty = np.float64(.02)
+    env.stalled_steps = 100
+    env.step([-1., 0.])
+    assert type(env.route_recovery_localization_only) is bool
+    json.dumps({'localization_only': env.route_recovery_localization_only})
+    env.close()

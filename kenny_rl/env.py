@@ -106,6 +106,9 @@ class KennyEnv(gym.Env):
         self.recovery_steps = 0
         self.route_recovery_ticks = 0
         self.route_recovery_active = False
+        self.route_recovery_retry_step = 0
+        self.route_recovery_scan_armed = True
+        self.route_recovery_localization_only = False
         self.depth_memory = {}
         self.path_length = 0.
         self.clutter_changes = 0
@@ -428,9 +431,15 @@ class KennyEnv(gym.Env):
         target = np.array([(delayed[0]+1)/2*r.max_speed, delayed[1]*r.max_turn_rate])
         recovering = c.recovery_enabled and self.stalled_steps >= max(1, round(3./c.dt))
         if c.route_recovery_enabled and c.recovery_enabled:
-            # Seek marker coverage before the hard uncertainty stop is reached.
-            if recovering or self.uncertainty > .20:
+            # A failed early scan is not new localization evidence. Retry it
+            # only after a marker correction, or a fresh stall after cooldown.
+            early_scan = self.uncertainty > .20 and self.route_recovery_scan_armed
+            if (not self.route_recovery_active and self.steps >= self.route_recovery_retry_step
+                    and (recovering or early_scan)):
                 self.route_recovery_active = True
+                self.route_recovery_ticks = 0
+                self.route_recovery_scan_armed = False
+                self.route_recovery_localization_only = bool(early_scan and not recovering)
             recovering = self.route_recovery_active
         if not len(self.route):
             # A fresh scan may already have opened a route. Replan before
@@ -512,14 +521,19 @@ class KennyEnv(gym.Env):
             self.estimate = self.pose + self.np_random.normal(0, [.015, .015, .02])
             self.estimate[2] = wrap_angle(self.estimate[2])
             self.uncertainty, self.marker_age = .02, 0
+            self.route_recovery_scan_armed = True
         if c.route_recovery_enabled and self.route_recovery_active:
-            # Release after a complete scan/attempt cycle, rather than use the
-            # old lifetime recovery counter and an unbounded spinning override.
-            cycle_ticks = max(1, round(8./c.dt))
-            if self.route_recovery_ticks >= cycle_ticks and self.uncertainty < .10:
+            # Hard deadline, even without a marker. Returning to the policy
+            # does not bypass _guard's unchanged hard localization stop.
+            # A proactive look must not consume the full stall-detour budget
+            # while the policy is still making useful forward progress.
+            budget = 2. if self.route_recovery_localization_only else 8.
+            budget_ticks = max(1, round(budget/c.dt))
+            if self.route_recovery_ticks >= budget_ticks:
                 self.route_recovery_active = False
                 self.route_recovery_ticks = 0
                 self.stalled_steps = 0
+                self.route_recovery_retry_step = self.steps + max(1, round(8./c.dt))
         self._sense()
         # Replan at 0.3 s cadence: quick enough to choose a new passing route
         # around walkers, but not on every physics substep.
