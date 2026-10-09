@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from kenny_rl.config import RobotConfig, EnvConfig, serialize
 from kenny_rl.env import KennyEnv
-from kenny_rl.replay import run_replay
+from kenny_rl.replay import run_replay, camera_marker_ids
 
 
 def setup_run(tmp_path):
@@ -37,6 +37,16 @@ def test_real_environment_replay_records_world_coordinates_and_timeout(tmp_path)
     np.testing.assert_allclose(result['frames'][-1]['pose'][:2],environment['start'])
     assert result['frames'][0]['route']
     assert result['frames'][-1]['event']=='timeout'
+    for frame in result['frames']:
+        scans=frame['sensors']
+        for name,count in [('lidar',72),('depth',36),('floor',12)]:
+            scan=scans[name]
+            assert len(scan['origin'])==3
+            for key in ('angles','ranges','valid','hits'):assert len(scan[key])==count
+            assert all(type(v) is bool for v in scan['valid'])
+        assert scans['lidar']['age_steps'] in (0,1)
+        assert scans['camera_hfov_deg']==60.
+        assert isinstance(frame['guard_reasons'],list)
     json.dumps(result,allow_nan=False)
 
 
@@ -52,6 +62,33 @@ def test_replay_validates_limits(tmp_path):
     environment,checkpoint=setup_run(tmp_path)
     for steps in (0,3001,1.5):
         with pytest.raises(ValueError,match='steps'):run_replay(environment,checkpoint,steps=steps,model=StopPolicy())
+
+
+def test_camera_highlight_respects_height_range_heading_face_and_occlusion():
+    from types import SimpleNamespace
+    marker={'id':7,'x':1.,'y':0.,'z':0.,'yaw':0.,'size':.2,'mount':'floor'}
+    boxes=np.empty((0,6))
+    world=SimpleNamespace(markers=np.array([[1.,0.]]),marker_metadata=[marker],
+                          map_origin=np.zeros(3),all_boxes=lambda:boxes)
+    robot=RobotConfig();pose=np.zeros(3)
+    assert camera_marker_ids(world,pose,robot)==[7]
+    assert camera_marker_ids(world,np.array([0.,0.,np.pi/2]),robot)==[]
+    world.markers[0]=[3.,0.]
+    assert camera_marker_ids(world,pose,robot)==[]
+    world.markers[0]=[1.,0.]
+    marker.update(mount='wall',z=.4,yaw=np.pi)
+    assert camera_marker_ids(world,pose,robot)==[7]
+    marker['yaw']=0.
+    assert camera_marker_ids(world,pose,robot)==[]
+    marker.update(yaw=np.pi,z=2.)
+    assert camera_marker_ids(world,pose,robot)==[]
+    marker['z']=.4
+    boxes=np.array([[.4,-.3,0.,.6,.3,2.]])
+    assert camera_marker_ids(world,pose,robot)==[]
+    boxes=np.empty((0,6))
+    world.map_origin[2]=np.pi/2
+    marker['yaw']=np.pi+np.pi/2
+    assert camera_marker_ids(world,pose,robot)==[7]
 
 
 def test_near_uses_true_horizontal_distance_to_marker_not_wall_approach(tmp_path):

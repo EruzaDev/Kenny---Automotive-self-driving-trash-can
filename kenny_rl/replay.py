@@ -7,6 +7,36 @@ from pathlib import Path
 import numpy as np
 from .config import load_config
 from .env import KennyEnv
+from .geometry import ray_boxes, wrap_angle
+
+
+def camera_marker_ids(world, pose, robot):
+    """Offline geometric camera overlay, not a decoded detection or policy input.
+
+    Unlike the legacy localization surrogate, honor surveyed marker height and
+    wall-face orientation. Pixel resolution and print quality are not modeled.
+    """
+    result=[]
+    camera=np.array([*pose[:2],robot.camera_height])
+    for marker,xy in zip(world.marker_metadata,world.markers):
+        delta=np.array([*xy,marker['z']])-camera
+        horizontal=float(np.linalg.norm(delta[:2]))
+        distance=float(np.linalg.norm(delta))
+        bearing=wrap_angle(np.arctan2(delta[1],delta[0])-pose[2])
+        elevation=np.rad2deg(np.arctan2(delta[2],horizontal))
+        if not (robot.camera_min_range < distance < min(robot.marker_range,robot.camera_range)
+                and abs(bearing) < np.deg2rad(robot.camera_hfov_deg/2)
+                and abs(elevation-robot.camera_pitch_deg) < robot.camera_vfov_deg/2):
+            continue
+        if marker['mount']=='wall':
+            yaw=marker['yaw']-world.map_origin[2]
+            if np.dot(-delta[:2],[np.cos(yaw),np.sin(yaw)]) <= 0:
+                continue
+        elif camera[2] <= marker['z']:
+            continue
+        measured,_=ray_boxes(camera,(delta/distance)[None,:],world.all_boxes(),distance+.02)
+        if measured[0] >= distance-.01:result.append(marker['id'])
+    return result
 
 
 def run_replay(environment, checkpoint, steps=1200, seed=42, model=None):
@@ -35,13 +65,29 @@ def run_replay(environment, checkpoint, steps=1200, seed=42, model=None):
         origin=env.world.map_origin
         c,s=math.cos(origin[2]),math.sin(origin[2])
         def world(p):return [float(origin[0]+c*p[0]-s*p[1]),float(origin[1]+s*p[0]+c*p[1])]
+        def scan_record(scan, acquisition, max_range, age_steps=0):
+            # Project observations from the estimated acquisition pose, as the
+            # mapper does. Never recompute sensors from hidden scene geometry.
+            return {'origin':[*world(acquisition),float(acquisition[2]+origin[2])],
+                    'angles':scan.angles.tolist(),'ranges':scan.ranges.tolist(),
+                    'valid':scan.valid.tolist(),'hits':scan.hits.tolist(),
+                    'max_range':max_range,'age_steps':age_steps}
         def frame():
             distance=float(np.linalg.norm(env.pose[:2]-env.world.destination_position))
             return {'step':env.steps,'pose':[*world(env.pose),float(env.pose[2]+origin[2])],
                     'estimate':[*world(env.estimate),float(env.estimate[2]+origin[2])],
                     'route':[world(p) for p in env.route],
                     'intervened':bool(env.intervened),'event':info['event'],
-                    'distance_to_destination_m':distance,'near_goal':distance<=5.}
+                    'distance_to_destination_m':distance,'near_goal':distance<=5.,
+                    'guard_reasons':list(env.guard_reasons),
+                    'camera_visible_marker_ids':camera_marker_ids(env.world,env.pose,robot),
+                    'marker_localization_updated':env.steps > 0 and env.marker_age == 0,
+                    'sensors':{
+                        'lidar':scan_record(env.lidar,env.lidar_estimate,robot.lidar_range,
+                                            env.steps-env.last_lidar_step),
+                        'depth':scan_record(env.depth,env.estimate,robot.camera_range),
+                        'floor':scan_record(env.floor,env.estimate,robot.camera_range),
+                        'camera_hfov_deg':robot.camera_hfov_deg}}
         frames=[frame()];reward_sum=0.
         for _ in range(steps):
             action,_=model.predict(observation,deterministic=True)
