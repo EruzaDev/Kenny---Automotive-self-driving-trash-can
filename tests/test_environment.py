@@ -14,6 +14,22 @@ def example():
             'start':[-1,0],'goal':[3,2]}
 
 
+def test_large_marker_dictionary_bounds_and_duplicates():
+    from kenny_rl.environment import validate_environment
+    source=example()
+    source['dictionary']='DICT_4X4_1000'
+    marker={'id':999,'x':-1.,'y':0.,'z':0.,'yaw':0.,'size':.2,'mount':'floor'}
+    source['markers']=[marker]
+    validate_environment(source)
+    source['markers']=[marker,dict(marker)]
+    with pytest.raises(ValueError,match='unique'):validate_environment(source)
+    source['markers']=[dict(marker,id=1000)]
+    with pytest.raises(ValueError,match='999'):validate_environment(source)
+    source['markers']=[marker]
+    source['dictionary']='DICT_4X4_50'
+    with pytest.raises(ValueError,match='49'):validate_environment(source)
+
+
 def test_reset_loads_custom_map_and_steps(tmp_path):
     p=tmp_path/'environment.json';p.write_text(json.dumps(example()))
     env=KennyEnv(environment=p,config=EnvConfig(stage='full'))

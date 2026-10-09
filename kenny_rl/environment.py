@@ -32,8 +32,10 @@ def destination_goal(env):
 def validate_environment(env):
     if env.get('version') != 1 or env.get('frame_id') != 'map' or env.get('units') != 'meters':
         raise ValueError('Expected version 1, frame_id map and units meters')
-    if env.get('dictionary') != 'DICT_4X4_50':
-        raise ValueError('Supported dictionary: DICT_4X4_50')
+    marker_limits = {'DICT_4X4_50': 50, 'DICT_4X4_1000': 1000}
+    dictionary = env.get('dictionary')
+    if dictionary not in marker_limits:
+        raise ValueError('Supported dictionaries: DICT_4X4_50, DICT_4X4_1000')
     grid = env['grid']
     w, h, r = grid['width'], grid['height'], grid['resolution']
     if type(w) is not int or type(h) is not int or not (1 <= w <= 4000 and 1 <= h <= 4000) or w*h > 4_000_000:
@@ -48,11 +50,9 @@ def validate_environment(env):
     ids = set()
     for marker in env.get('markers', []):
         mid = marker['id']
-        if type(mid) is not int or not 0 <= mid < 50 or mid in ids:
-            raise ValueError('DICT_4X4_50 marker IDs must be unique integers from 0 to 49')
+        if type(mid) is not int or not 0 <= mid < marker_limits[dictionary] or mid in ids:
+            raise ValueError(f'{dictionary} marker IDs must be unique integers from 0 to {marker_limits[dictionary]-1}')
         ids.add(mid)
-        if env.get('dictionary') != 'DICT_4X4_50':
-            raise ValueError('Supported dictionary: DICT_4X4_50')
         values = [marker[k] for k in ('x', 'y', 'z', 'yaw', 'size')]
         if not np.isfinite(values).all() or not .01 <= marker['size'] <= 1 or marker['z'] < 0 or marker['mount'] not in ('floor', 'wall'):
             raise ValueError('Invalid marker pose, mounting or size')
