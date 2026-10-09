@@ -441,4 +441,28 @@ The clearance-memory revision was checked on seeds 20042, 20017, 20001 and
 20002: 20001 and 20002 succeeded; 20042 and 20017 timed out, with no collisions.
 This also shows that the earlier success on 20017 did not survive the revision.
 
+Rectangular failure replays must use the same nominal dimensions as evaluation;
+the output filename does not configure the room. For example:
+
+```bash
+python scripts/review_recovery.py \
+  --model runs/server-mixed-21x21-reviewed/seed_3/best_guarded.zip \
+  --seeds 50002 50028 50040 50071 50091 \
+  --world-width 21 --world-height 10 \
+  --recovery-only --marker-sweep --snapshot-every 10 \
+  --output artifacts/seed3-21x10-sensor-diagnostics.json
+```
+
+Overrides leave the checkpoint config and domain randomization unchanged.
+Reports include nominal and actual room dimensions and per-snapshot sensor
+validity fractions. In the corrected seed-50000 rectangular failure replay,
+50028 never translated; 50040, 50071 and 50091 also reached stationary poses
+with invalid floor coverage. Zero-dropout geometric checks at their final
+poses gave valid floor fractions of 0.25, 0.417, 0.417 and 0.417 respectively,
+below the 0.5 interlock threshold. These are coverage/occlusion stops, not
+evidence that weakening the interlock is safe. Seed 50002 had no detectable
+marker at its final position across a 72-heading, zero-dropout sweep. Other
+failures retain good localization but show obstacle or no-route deadlocks;
+these checks do not establish a controller fix or hardware safety.
+
 The sibling [Kenny Environment Studio](../kenny-map-editor/README.md) can create measured maps, place ArUco landmarks and obstacles, and capture ROS scan maps. Load an exported `environment.json` with `python -m kenny_rl.demo --environment /path/environment.json`, or pass `--environment` to evaluation. Rectangular maps retain their actual width and height. Exported maps use ROS world coordinates; demo start/goal overrides use simulator coordinates after transforming by the inverse grid origin. The original map origin and full marker metadata remain available on the loaded world.

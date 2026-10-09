@@ -20,6 +20,8 @@ def main():
     parser.add_argument('--recovery-only', action='store_true')
     parser.add_argument('--route-recovery', action='store_true')
     parser.add_argument('--marker-sweep', action='store_true')
+    parser.add_argument('--world-width', type=float, help='Nominal generated room width in metres')
+    parser.add_argument('--world-height', type=float, help='Nominal generated room height in metres')
     parser.add_argument('--snapshot-every', type=int, default=300)
     args = parser.parse_args()
     output = Path(args.output)
@@ -29,6 +31,12 @@ def main():
         parser.error('--snapshot-every must be positive')
     source = Path(args.model).parent
     robot, config, training = load_config(source/'config.json')
+    try:
+        config = replace(config,
+                         world_width=args.world_width if args.world_width is not None else config.world_width,
+                         world_height=args.world_height if args.world_height is not None else config.world_height)
+    except ValueError as error:
+        parser.error(str(error))
     torch.set_num_threads(1)
     model = PPO.load(args.model, device='cpu', custom_objects={
         'lr_schedule': lambda _: training.get('learning_rate', 1e-5),
@@ -52,6 +60,11 @@ def main():
                         'route_remaining': env._remaining(),
                         'route_lookahead': env._lookahead()[0].tolist(),
                         'uncertainty': env.uncertainty, 'requested': env.requested.tolist(),
+                        'sensor_valid_fractions': {
+                            'depth': float(env.depth.valid.mean()),
+                            'floor': float(env.floor.valid.mean()),
+                            'lidar': float(env.lidar.valid.mean()),
+                            'downward': float(env.down_valid.mean())},
                         'marker_age': env.marker_age,
                         'recovery_active': env.route_recovery_active,
                         'recovery_ticks': env.route_recovery_ticks,
@@ -69,6 +82,10 @@ def main():
                     break
             results.append({'recovery': recovery, 'route_recovery': (args.route_recovery or args.marker_sweep) and recovery,
                             'marker_sweep': args.marker_sweep and recovery,
+                            'world_width': config.world_width or config.world_size,
+                            'world_height': config.world_height or config.world_size,
+                            'actual_world_width': env.world.width,
+                            'actual_world_height': env.world.height,
                             'seed': seed, **info, 'snapshots': snapshots})
             output.write_text(json.dumps(results, indent=2))
             print(recovery, seed, info['event'], info['steps'], info['intervention_reasons'], flush=True)
