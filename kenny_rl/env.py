@@ -109,6 +109,7 @@ class KennyEnv(gym.Env):
         self.route_recovery_retry_step = 0
         self.route_recovery_scan_armed = True
         self.route_recovery_localization_only = False
+        self.route_recovery_sweep_angle = 0.
         self.depth_memory = {}
         self.path_length = 0.
         self.clutter_changes = 0
@@ -399,6 +400,11 @@ class KennyEnv(gym.Env):
         """
         r, c = self.robot, self.config
         self.route_recovery_ticks += 1
+        if c.marker_sweep_enabled and self.route_recovery_localization_only:
+            # Keep a consistent direction until measured heading coverage or
+            # a marker correction ends the scan. No hidden marker coordinates.
+            return np.array([0., min(.5, r.max_turn_rate)
+                             if abs(self.measured_velocity[0]) < .01 else 0.])
         scan_ticks = max(1, round(2./c.dt))
         cycle_ticks = max(scan_ticks + 1, round(8./c.dt))
         phase = (self.route_recovery_ticks - 1) % cycle_ticks
@@ -433,13 +439,22 @@ class KennyEnv(gym.Env):
         if c.route_recovery_enabled and c.recovery_enabled:
             # A failed early scan is not new localization evidence. Retry it
             # only after a marker correction, or a fresh stall after cooldown.
-            early_scan = self.uncertainty > .20 and self.route_recovery_scan_armed
+            # The full sweep has a longer sensing budget. Start with extra
+            # localization margin, before driving out of marker coverage.
+            scan_threshold = .15 if c.marker_sweep_enabled else .20
+            early_scan = self.uncertainty > scan_threshold and self.route_recovery_scan_armed
             if (not self.route_recovery_active and self.steps >= self.route_recovery_retry_step
                     and (recovering or early_scan)):
                 self.route_recovery_active = True
                 self.route_recovery_ticks = 0
-                self.route_recovery_scan_armed = False
                 self.route_recovery_localization_only = bool(early_scan and not recovering)
+                if c.marker_sweep_enabled and self.uncertainty > scan_threshold:
+                    self.route_recovery_localization_only = True
+                # A low-uncertainty route alignment did not perform a marker
+                # sweep and must not consume that separate opportunity.
+                if not c.marker_sweep_enabled or self.route_recovery_localization_only:
+                    self.route_recovery_scan_armed = False
+                self.route_recovery_sweep_angle = 0.
             recovering = self.route_recovery_active
         if not len(self.route):
             # A fresh scan may already have opened a route. Replan before
@@ -528,8 +543,13 @@ class KennyEnv(gym.Env):
             # A proactive look must not consume the full stall-detour budget
             # while the policy is still making useful forward progress.
             budget = 2. if self.route_recovery_localization_only else 8.
+            sweep_done = False
+            if c.marker_sweep_enabled and self.route_recovery_localization_only:
+                budget = 20.
+                self.route_recovery_sweep_angle += max(0., float(self.measured_velocity[1]))*c.dt
+                sweep_done = corrected or self.route_recovery_sweep_angle >= 2*np.pi
             budget_ticks = max(1, round(budget/c.dt))
-            if self.route_recovery_ticks >= budget_ticks:
+            if sweep_done or self.route_recovery_ticks >= budget_ticks:
                 self.route_recovery_active = False
                 self.route_recovery_ticks = 0
                 self.stalled_steps = 0

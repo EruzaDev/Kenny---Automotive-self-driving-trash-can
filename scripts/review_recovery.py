@@ -19,6 +19,7 @@ def main():
     parser.add_argument('--output', required=True)
     parser.add_argument('--recovery-only', action='store_true')
     parser.add_argument('--route-recovery', action='store_true')
+    parser.add_argument('--marker-sweep', action='store_true')
     parser.add_argument('--snapshot-every', type=int, default=300)
     args = parser.parse_args()
     output = Path(args.output)
@@ -36,7 +37,8 @@ def main():
     output.parent.mkdir(parents=True, exist_ok=True)
     for recovery in ((True,) if args.recovery_only else (False, True)):
         env = KennyEnv(robot, replace(config, split='test', recovery_enabled=recovery,
-                                     route_recovery_enabled=args.route_recovery and recovery))
+                                     route_recovery_enabled=(args.route_recovery or args.marker_sweep) and recovery,
+                                     marker_sweep_enabled=args.marker_sweep and recovery))
         for seed in args.seeds:
             obs, _ = env.reset(seed=seed)
             snapshots = []
@@ -56,6 +58,7 @@ def main():
                         'recovery_retry_step': env.route_recovery_retry_step,
                         'recovery_scan_armed': env.route_recovery_scan_armed,
                         'recovery_localization_only': env.route_recovery_localization_only,
+                        'recovery_sweep_angle': env.route_recovery_sweep_angle,
                         'depth_memory_count': len(env.depth_memory),
                         'executed': env.executed.tolist(), 'guard': env.guard_reasons,
                         'velocity': env.measured_velocity.tolist(),
@@ -64,7 +67,8 @@ def main():
                         'route_available': bool(len(env.route))})
                 if terminated or truncated:
                     break
-            results.append({'recovery': recovery, 'route_recovery': args.route_recovery and recovery,
+            results.append({'recovery': recovery, 'route_recovery': (args.route_recovery or args.marker_sweep) and recovery,
+                            'marker_sweep': args.marker_sweep and recovery,
                             'seed': seed, **info, 'snapshots': snapshots})
             output.write_text(json.dumps(results, indent=2))
             print(recovery, seed, info['event'], info['steps'], info['intervention_reasons'], flush=True)

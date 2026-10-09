@@ -176,3 +176,111 @@ def test_recovery_mode_is_json_serializable_after_numpy_uncertainty():
     assert type(env.route_recovery_localization_only) is bool
     json.dumps({'localization_only': env.route_recovery_localization_only})
     env.close()
+
+
+def test_marker_sweep_brakes_and_ends_on_measured_heading_coverage(monkeypatch):
+    from kenny_rl import sensors
+    env = KennyEnv(config=EnvConfig(stage='empty', recovery_enabled=True,
+        route_recovery_enabled=True, marker_sweep_enabled=True,
+        domain_randomization=False, dropout=0., sensor_noise=0.))
+    env.reset(seed=1)
+    env.route_recovery_localization_only = True
+    env.measured_velocity[:] = [.08, 0.]
+    np.testing.assert_array_equal(env._route_recovery_target(), [0., 0.])
+    env.measured_velocity[:] = 0.
+    env.route_recovery_ticks = 0
+    env.uncertainty = .21
+    for scan in (env.lidar, env.depth, env.floor):
+        scan.valid[:] = True
+        scan.hits[:] = False
+    env.down_valid[:] = True
+    env.down_hazard[:] = False
+    monkeypatch.setattr(env, '_sense', lambda *args, **kwargs: None)
+    monkeypatch.setattr(sensors, 'marker_visible', lambda *args: False)
+    env.step([-1., 0.])
+    assert env.route_recovery_active
+    while env.route_recovery_active:
+        env.step([-1., 0.])
+        assert env.steps <= 200
+    assert env.route_recovery_sweep_angle >= 2*np.pi
+    assert env.steps < 200
+    assert not env.route_recovery_scan_armed
+    assert env.uncertainty > .21  # coverage is not a fabricated pose correction
+    assert env.route_recovery_retry_step > env.steps
+    env.reset(seed=1)
+    assert env.route_recovery_sweep_angle == 0.
+    env.close()
+
+
+def test_marker_sweep_blocked_by_floor_still_has_hard_deadline(monkeypatch):
+    from kenny_rl import sensors
+    env = KennyEnv(config=EnvConfig(stage='empty', recovery_enabled=True,
+        route_recovery_enabled=True, marker_sweep_enabled=True,
+        domain_randomization=False, dropout=0., sensor_noise=0.))
+    env.reset(seed=1)
+    env.uncertainty = .4
+    env.down_valid[:] = False
+    monkeypatch.setattr(env, '_sense', lambda *args, **kwargs: None)
+    monkeypatch.setattr(sensors, 'marker_visible', lambda *args: False)
+    for _ in range(200):
+        env.step([-1., 0.])
+        np.testing.assert_array_equal(env.executed, [-1., 0.])
+    assert not env.route_recovery_active
+    assert env.route_recovery_sweep_angle == 0.
+    assert env.uncertainty > .4
+    env.close()
+
+
+def test_marker_sweep_releases_immediately_on_real_marker_signal(monkeypatch):
+    from kenny_rl import sensors
+    env = KennyEnv(config=EnvConfig(stage='empty', recovery_enabled=True,
+        route_recovery_enabled=True, marker_sweep_enabled=True,
+        domain_randomization=False, dropout=0., sensor_noise=0.))
+    env.reset(seed=1)
+    env.uncertainty = .21
+    monkeypatch.setattr(sensors, 'marker_visible', lambda *args: False)
+    env.step([-1., 0.])
+    assert env.route_recovery_active
+    monkeypatch.setattr(sensors, 'marker_visible', lambda *args: True)
+    env.step([-1., 0.])
+    assert not env.route_recovery_active and env.uncertainty == .02
+    assert env.route_recovery_scan_armed
+    assert env.route_recovery_retry_step > env.steps
+    env.close()
+
+
+def test_marker_sweep_earlier_trigger_does_not_change_bounded_baseline(monkeypatch):
+    from kenny_rl import sensors
+    monkeypatch.setattr(sensors, 'marker_visible', lambda *args: False)
+    for enabled in (False, True):
+        env = KennyEnv(config=EnvConfig(stage='empty', recovery_enabled=True,
+            route_recovery_enabled=True, marker_sweep_enabled=enabled,
+            domain_randomization=False))
+        env.reset(seed=1)
+        env.uncertainty = .16
+        env.step([-1., 0.])
+        assert env.route_recovery_active == enabled
+        env.close()
+
+
+def test_route_alignment_does_not_consume_marker_sweep_opportunity(monkeypatch):
+    from kenny_rl import sensors
+    monkeypatch.setattr(sensors, 'marker_visible', lambda *args: False)
+    for enabled in (False, True):
+        env = KennyEnv(config=EnvConfig(stage='empty', recovery_enabled=True,
+            route_recovery_enabled=True, marker_sweep_enabled=enabled,
+            domain_randomization=False))
+        env.reset(seed=1)
+        env.uncertainty = .02
+        env.stalled_steps = 100
+        env.step([-1., 0.])
+        assert env.route_recovery_active and not env.route_recovery_localization_only
+        assert env.route_recovery_scan_armed == enabled
+        env.close()
+
+
+def test_marker_sweep_flag_requires_a_boolean():
+    import pytest
+    for value in ('false', 1, None):
+        with pytest.raises(ValueError, match='marker_sweep_enabled must be a boolean'):
+            EnvConfig(marker_sweep_enabled=value)

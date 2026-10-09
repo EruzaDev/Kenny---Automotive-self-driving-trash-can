@@ -70,6 +70,7 @@ class EnvConfig:
     world_height: float | None = None
     recovery_enabled: bool = False
     route_recovery_enabled: bool = False
+    marker_sweep_enabled: bool = False
     dt: float = 0.1
     max_steps: int = 1200
     grid_resolution: float = 0.25
@@ -95,6 +96,8 @@ class EnvConfig:
     sensor_outage_steps: tuple = (2, 5)
 
     def __post_init__(self):
+        if type(self.marker_sweep_enabled) is not bool:
+            raise ValueError("marker_sweep_enabled must be a boolean")
         for name in ("world_size", "world_width", "world_height", "dt", "grid_resolution", "sensor_noise"):
             value = getattr(self, name)
             if value is None and name in ("world_width", "world_height"):

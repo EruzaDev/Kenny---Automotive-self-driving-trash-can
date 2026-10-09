@@ -396,9 +396,36 @@ python -m kenny_rl.evaluate \
   --output artifacts/seed3-route-bounded-test.json
 ```
 
-Compare this new report with `seed3-clearance-recovery-test.json` using
-`scripts/compare_evaluations.py`. Do not select it based only on six replay seeds
-or enable it on hardware without broader safety and timing validation.
+Compare the bounded report with `seed3-clearance-recovery-test.json` using
+`scripts/compare_evaluations.py`; preserve both files and inspect seed outcomes.
+
+A separate `--marker-sweep` candidate implies route recovery but leaves the
+83%-success bounded revision unchanged when absent. Localization scans start
+at uncertainty 0.15, brake before rotating, request at most 0.5 rad/s, and keep
+one direction until a marker is reacquired, measured rotation reaches one full
+turn, or the hard 20-second deadline expires. Floor/downward interlocks and the
+hard localization stop remain unchanged; an unsuccessful scan never resets
+uncertainty. The controller does not read hidden marker positions. Offline
+geometry checks are diagnostic only. This candidate addresses interrupted
+heading coverage, not missing markers or a production localization stack.
+Low-uncertainty route alignment does not consume the candidate's separate
+marker-scan opportunity. The 11-case development replay recovered 20008, 20012,
+20074 and 20082 but regressed 20011, 20039 and 20062. Seeds 20027, 20031 and
+20068 retained success; 20042 still timed out. This is seven successes versus
+six for the bounded baseline on this selected sample, with no observed collision
+or cliff. It is not an unbiased estimate of overall success or safety.
+
+```bash
+python -m kenny_rl.evaluate \
+  --model runs/server-mixed-21x21-reviewed/seed_3/best_guarded.zip \
+  --episodes 100 --split test --stage mixed --marker-sweep \
+  --output artifacts/seed3-marker-sweep-test.json
+```
+
+Compare this report with the preserved `seed3-route-bounded-test.json`. Do not
+retrain or deploy based only on selected development failures; use fresh seeds
+after checking the paired outcomes and safety metrics.
+
 Before the deadline/cooldown fix, local replay with seed 3's reviewed
 `best_guarded.zip` recovered 20060, 20074,
 20084 and 20085 (1099, 1269, 529 and 686 steps), with no observed collision or
