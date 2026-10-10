@@ -1,0 +1,20 @@
+{
+  "criterion": "success, safety, navigation reward, interventions",
+  "selected": "initialized.zip",
+  "validation_timesteps": 0,
+  "scores": {
+    "initialized.zip": [
+      0.0,
+      -0.0,
+      -4.3300252911352874,
+      -0.4122222222222222
+    ],
+    "final.zip": [
+      0.0,
+      -0.0,
+      -23.621380709575455,
+      -0.8127777777777778
+    ]
+  },
+  "held_out_data_used": false
+}

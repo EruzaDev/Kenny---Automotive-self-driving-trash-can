@@ -15,7 +15,12 @@ def route_action(env):
     heading = np.arctan2(point[1], point[0])
     goal_distance = np.linalg.norm(env.world.goal-env.estimate[:2])
     speed = env.approach_speed(goal_distance) * max(0., np.cos(heading))
-    return np.array([2*speed/env.robot.max_speed-1, np.clip(2*heading/env.robot.max_turn_rate, -1, 1)], dtype=np.float32)
+    action = np.array([2*speed/env.robot.max_speed-1, np.clip(2*heading/env.robot.max_turn_rate, -1, 1)], dtype=np.float32)
+    if env.config.adaptive_speed_enabled and env.shield_active:
+        turn = float(action[1])*env.robot.max_turn_rate
+        speed = env._adaptive_speed_target(np.array([speed, turn]), record=False)[0]
+        action[0] = 2*speed/env.robot.max_speed-1
+    return action
 
 
 def main():

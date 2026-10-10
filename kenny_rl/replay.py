@@ -84,6 +84,9 @@ def run_replay(environment, checkpoint, steps=1200, seed=42, model=None, control
                     'intervened':bool(env.intervened),'event':info['event'],
                     'distance_to_destination_m':distance,'near_goal':distance<=5.,
                     'guard_reasons':list(env.guard_reasons),
+                    'policy_requested_speed_m_s':float((env.requested[0]+1)*robot.max_speed/2),
+                    'speed_m_s':float(env.velocity[0]*env.slip[0]),
+                    'adaptive_speed_limit_m_s':float(env.speed_governor_limit) if config.adaptive_speed_enabled else None,
                     'camera_visible_marker_ids':camera_marker_ids(env.world,env.pose,robot),
                     'marker_localization_updated':env.steps > 0 and env.marker_age == 0,
                     'sensors':{

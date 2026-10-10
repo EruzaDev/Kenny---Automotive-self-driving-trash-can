@@ -48,12 +48,15 @@ class KennyEnv(gym.Env):
         self.finished = True
 
     def contract(self):
-        return {"version": SCHEMA_VERSION, "features": FEATURES,
+        result = {"version": SCHEMA_VERSION, "features": FEATURES,
                 "frame_size": FRAME_SIZE, "history": self.config.history,
                 "dt": self.config.dt,
                 "guard_min_braking_deceleration": self.robot.acceleration * min(self.config.acceleration_scale_range[0], 1.),
                 "robot": asdict(self.robot), "normalization": "fixed bounds in env._frame",
                 "actions": "v=(a0+1)/2*max_speed; omega=a1*max_turn_rate"}
+        if self.config.adaptive_speed_enabled:
+            result["adaptive_speed_controller"] = "route-sensor-cruise-v2"
+        return result
 
     def reset(self, *, seed=None, options=None):
         if seed is not None:
@@ -111,6 +114,9 @@ class KennyEnv(gym.Env):
         self.route_recovery_localization_only = False
         self.route_recovery_sweep_angle = 0.
         self.depth_memory = {}
+        self.range_noise_peak = self.config.sensor_noise
+        self.speed_governor_events = 0
+        self.speed_governor_limit = self.robot.max_speed
         self.path_length = 0.
         self.clutter_changes = 0
         self.collision_source = None
@@ -163,18 +169,36 @@ class KennyEnv(gym.Env):
             self.outages[name] -= 1
         return active
 
+    def _motion_sensor_errors(self):
+        """Bounded motion-error surrogates, not camera rendering or scan deskew.
+
+        Use current velocity rather than the configured maximum, so increasing
+        a speed cap does not add motion error to a stationary robot.
+        """
+        c = self.config
+        speed, turn = np.abs(self.measured_velocity)
+        range_noise = (c.sensor_noise + c.motion_range_noise_per_mps*speed +
+                       c.motion_range_noise_per_radps*turn)
+        marker_dropout = min(.95, c.marker_dropout +
+                             c.motion_marker_dropout_per_mps*speed +
+                             c.motion_marker_dropout_per_radps*turn)
+        # Preserve higher user-specified base dropout, even above the cap.
+        return float(range_noise), float(max(c.marker_dropout, marker_dropout))
+
     def _sense(self, force=False):
         r, c = self.robot, self.config
+        range_noise, _ = self._motion_sensor_errors()
+        self.range_noise_peak = max(self.range_noise_peak, range_noise)
         period = max(1, round(1/(r.lidar_hz*c.dt)))
         if force or self.steps-self.last_lidar_step >= period:
-            self.lidar = sensors.lidar(self.world, self.pose, r, self.np_random, c.sensor_noise, self.dropout)
+            self.lidar = sensors.lidar(self.world, self.pose, r, self.np_random, range_noise, self.dropout)
             self.last_lidar_step = self.steps
             self.lidar_estimate = self.estimate.copy()
             if self._sensor_outage("lidar"):
                 self.lidar.valid[:] = False
                 self.lidar.hits[:] = False
                 self.lidar.ranges[:] = r.lidar_range
-        self.depth = sensors.depth(self.world, self.pose, r, self.np_random, c.sensor_noise, self.dropout)
+        self.depth = sensors.depth(self.world, self.pose, r, self.np_random, range_noise, self.dropout)
         self.floor = sensors.floor_scan(self.world, self.pose, r, self.np_random, self.dropout)
         if self._sensor_outage("depth"):
             for scan in (self.depth, self.floor):
@@ -301,7 +325,8 @@ class KennyEnv(gym.Env):
             points = self._local(np.asarray([value[0] for value in self.depth_memory.values()]))
             # Conservative corridor includes lateral drift during a curved
             # braking approach. Only sensor-observed points enter this limit.
-            radius = r.radius + DEPTH_OBSTACLE_BUFFER + 2*c.sensor_noise + self.uncertainty
+            range_noise, _ = self._motion_sensor_errors()
+            radius = r.radius + DEPTH_OBSTACLE_BUFFER + 2*max(range_noise, self.range_noise_peak) + self.uncertainty
             yaw = max(abs(target[1]), abs(self.measured_velocity[1]))
             radius += max(target[0], abs(self.measured_velocity[0]))*yaw*.5
             relevant = (points[:, 0] > 0) & (np.abs(points[:, 1]) < radius)
@@ -473,6 +498,8 @@ class KennyEnv(gym.Env):
                 target = np.array([0., min(.3, r.max_turn_rate)
                                    if abs(self.measured_velocity[0]) < .01 else 0.])
             self.recovery_steps += 1
+        if c.adaptive_speed_enabled and self.shield_active:
+            target = self._adaptive_speed_target(target, allow_cruise=not recovering)
         previously_intervened = self.intervened
         target, self.intervened = self._guard(target)
         self.interventions += int(self.intervened)
@@ -530,7 +557,8 @@ class KennyEnv(gym.Env):
         self.estimate[:2] += self.measured_velocity[0]*c.dt*np.array([np.cos(self.estimate[2]), np.sin(self.estimate[2])])
         self.uncertainty += .0005 + .003*abs(self.velocity[0])*c.dt
         predicted_remaining = self._remaining()
-        corrected = sensors.marker_visible(self.world, self.pose, r, self.np_random, c.marker_dropout)
+        _, marker_dropout = self._motion_sensor_errors()
+        corrected = sensors.marker_visible(self.world, self.pose, r, self.np_random, marker_dropout)
         if corrected:
             # Surrogate of a calibrated marker pose solution; no perfect pose observation.
             self.estimate = self.pose + self.np_random.normal(0, [.015, .015, .02])
@@ -601,6 +629,108 @@ class KennyEnv(gym.Env):
         self.history.append(self._frame())
         return self._observation(), float(reward), terminated, truncated, self._info(event)
 
+    def _clearance_speed(self, distance, closing_speed=0.):
+        """Reserve reaction travel, braking distance, and obstacle approach.
+
+        Solve v*latency + v*v/(2*a) + u*(latency + v/a) <= distance.
+        Neither hidden episode acceleration nor obstacle identity is used.
+        """
+        a = self.robot.acceleration*min(self.config.acceleration_scale_range[0], 1.)
+        latency = (self.config.dt*(1+self.config.command_delay_max_steps) +
+                   1/self.robot.lidar_hz)
+        distance = max(0., distance-closing_speed*latency)
+        term = a*latency + closing_speed
+        return max(0., float(np.sqrt(term*term+2*a*distance)-term))
+
+    def _adaptive_speed_target(self, target, allow_cruise=True, record=True):
+        """Cruise on an observed straight route; slow for bends and returns.
+
+        This is an optional sensor-based controller layered on the policy.
+        Existing configurations leave it disabled. Guard interlocks still run.
+        """
+        r, c = self.robot, self.config
+        limit = r.max_speed
+        front = np.abs(self.lidar.angles) < np.deg2rad(40)
+        coverage = (np.all(self.lidar.valid[front]) and
+                    np.count_nonzero(self.depth.valid) >= len(self.depth.valid)*.8 and
+                    np.count_nonzero(self.floor.valid) >= len(self.floor.valid)*.5 and
+                    np.all(self.down_valid) and not np.any(self.down_hazard) and
+                    self.uncertainty <= .35 and len(self.route) > 0)
+        straight = False
+        if not coverage:
+            limit = 0.
+        else:
+            points, valid = self._lookahead()
+            bearings = np.abs(np.arctan2(points[:, 1], points[:, 0]))
+            aligned = (valid > 0) & (points[:, 0] > 0) & (bearings <= .15)
+            # Normal steering may approach an offset waypoint or a gentle
+            # bend. The stricter alignment test is only for cruise boosting.
+            reachable = (valid > 0) & (points[:, 0] > 0)
+            horizon = 0.
+            for index in range(len(points)):
+                if not reachable[index]:
+                    break
+                horizon = float(points[index, 0])
+            straight = bool(np.all(aligned) and abs(target[1]) <= .15 and
+                            abs(self.measured_velocity[1]) <= .15)
+            limit = min(limit, self._clearance_speed(horizon),
+                        self.approach_speed(float(np.linalg.norm(self.world.goal-self.estimate[:2]))))
+            # A smooth heading cap lets the policy correct cross-track error;
+            # an angular threshold creates a deadlock at its boundary.
+            limit *= max(0., float(np.cos(bearings[0])))**2
+            # Anticipate noise during the proposed cruise and retain the
+            # past error magnitude for remembered sensor returns.
+            noise, _ = self._motion_sensor_errors()
+            noise = max(noise, self.range_noise_peak,
+                        c.sensor_noise+c.motion_range_noise_per_mps*r.max_speed*
+                        max(c.motor_gain_range)+c.motion_range_noise_per_radps*r.max_turn_rate)
+            width = r.radius+PLANAR_OBSTACLE_BUFFER+2*noise+self.uncertainty
+            closing = MAX_PEDESTRIAN_SPEED if c.stage in ("dynamic", "full") else 0.
+            braking = r.acceleration*min(c.acceleration_scale_range[0], 1.)
+            latency = c.dt*(1+c.command_delay_max_steps)+1/r.lidar_hz
+            for name, scan in (("lidar", self.lidar), ("depth", self.depth)):
+                x = scan.ranges*np.cos(scan.angles)
+                y = np.abs(scan.ranges*np.sin(scan.angles))
+                buffer = DEPTH_OBSTACLE_BUFFER if name == "depth" else PLANAR_OBSTACLE_BUFFER
+                hits = scan.valid & scan.hits & (x > 0)
+                # Bound both parties' travel by their scalar path lengths.
+                # Forward projection alone loses lateral separation and can
+                # turn a nearby side wall into a zero-distance obstacle.
+                clearance = scan.ranges-r.radius-buffer-2*noise-self.uncertainty
+                if closing:
+                    # The crossing corridor depends on the proposed speed,
+                    # rather than always using the configured maximum. Find
+                    # the largest feasible speed without obstacle identities.
+                    low, high = 0., limit
+                    for _ in range(24):
+                        speed = (low+high)/2
+                        relevant = hits & (y < width+closing*(latency+speed/braking))
+                        safe = not np.any(relevant) or speed <= self._clearance_speed(float(np.min(clearance[relevant])), closing)
+                        if safe:
+                            low = speed
+                        else:
+                            high = speed
+                    limit = low
+                else:
+                    relevant = hits & (y < width)
+                    if np.any(relevant):
+                        # Static forward returns still reserve longitudinal
+                        # stopping space along the robot's travel direction.
+                        distance = float(np.min(x[relevant]))-r.radius-buffer-2*noise-self.uncertainty
+                        limit = min(limit, self._clearance_speed(distance))
+            if np.any(self.floor.hits & self.floor.valid):
+                clearance = float(np.min(self.floor.ranges[self.floor.hits & self.floor.valid]))-width
+                limit = min(limit, self._clearance_speed(clearance))
+        adjusted = target.copy()
+        if target[0] > 0 and allow_cruise and straight:
+            adjusted[0] = limit
+        else:
+            adjusted[0] = min(target[0], limit)
+        if record:
+            self.speed_governor_limit = limit
+            self.speed_governor_events += int(abs(adjusted[0]-target[0]) > 1e-9)
+        return adjusted
+
     def approach_speed(self, distance):
         """Maximum speed that can still settle inside the arrival radius.
 
@@ -616,6 +746,9 @@ class KennyEnv(gym.Env):
 
     def _info(self, event):
         return {"event": event, "is_success": event == "success", "steps": self.steps,
+                "adaptive_speed_enabled": self.config.adaptive_speed_enabled,
+                "speed_governor_events": self.speed_governor_events,
+                "speed_governor_limit_m_s": self.speed_governor_limit,
                 "interventions": self.interventions, "path_length": self.path_length,
                 "shield_active": self.shield_active,
                 "unsafe_command_steps": self.unsafe_command_steps,

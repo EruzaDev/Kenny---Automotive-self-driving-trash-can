@@ -4,6 +4,8 @@ A runnable Gymnasium navigation simulator and PPO training pipeline for a small 
 
 **This is a training environment, not a validated autonomous robot controller.** The simulator approximates LiDAR, depth, marker localization and wheel motion. Use it for learning and debugging, then validate in Gazebo and on guarded hardware before deployment. The current ROS/robot roadmap is in [the robot setup guide](docs/RL_TRAINING_AND_ROBOT_GUIDE.md).
 
+The [0.60, 0.80, and 1.00 m/s simulation checkpoints](runs/faster-noise-moving-pilot-20261010/README.md) are included with their loading configs, contracts, and test reports. Use `speed_100/best_guarded.zip` for the 1.00 m/s map preview; see the checkpoint notes for the separate relaxed-cruise editor mode.
+
 For Raspberry Pi 5, follow the [installation and live 3D depth GUI guide](docs/PI5_SETUP.md). The [tested Pi status](docs/PI5_SETUP_STATUS.md) records measured results and remaining hardware issues.
 
 ![Generated training world with walls, moving people, bags, overhangs and cliffs](docs/training_world.png)

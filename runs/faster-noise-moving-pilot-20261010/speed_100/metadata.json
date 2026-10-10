@@ -1,0 +1,31 @@
+{
+  "seed": 3,
+  "resume": null,
+  "initialize_policy": "/home/siege/Documents/Kenny---Automotive-self-driving-trash-can/runs/server-mixed-21x21-reviewed/seed_3/best_guarded.zip",
+  "python": "3.10.21 (main, Aug 13 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]",
+  "torch": "2.5.1+cpu",
+  "schema": "kenny-geometric-v3",
+  "hardware": {
+    "device": "cpu",
+    "name": "CPU"
+  },
+  "headless": true,
+  "source_sha256": {
+    "__init__.py": "907f518ef8e302313964d59e155171864cff198641f74313a26cc96dd84a0843",
+    "config.py": "3f130e9529a185cdae2952b0953460734a962db2939a85f4f87811460105d53b",
+    "geometry.py": "3895a804a1e3e69595d538ba061820c85698e71d4c83491543f4150bec8d5d98",
+    "planner.py": "88917163267f36e2b5362a022496c7837dabaf3b51c55548aa9e37a33b806a00",
+    "world.py": "57436557e424fdcd146811bddbd6dfa616df635a12e30124a65f155e82a8aaa4",
+    "sensors.py": "c7fc90aa723fa6f9bef7015ce154a10d977ddc700ae1a270b44f40099f5ad84d",
+    "env.py": "23906324fccd14f5a8d66bdc558db93c77ed07b0967d7ecd2303231acb783dc5",
+    "render.py": "fdf0bbdb6a40daf3509668d4299cf78f4e327265dcd45cb63e5a2f3d5422d995",
+    "train.py": "6c2e66827e4ea593c5ebf2ffb73db77c29a85da1529ce0a20b98009ff9265a1c",
+    "evaluate.py": "52142b09ee4392266361de7a39332b8dfe377e46d00163cfd92f5c3b3faa8fe9",
+    "demo.py": "66059803985f1b4d37319dde60d36d7bf2d30769739c569c047a47672be1a409",
+    "benchmark.py": "a1858d25ea0efbf128a144477ebe734ff500dca35353eb30025e86928d5378b9",
+    "runtime.py": "59ac1cb7cab1c3e601a64ac78483dd0360c13936fb9a08abd2a16cdd04e6bc53",
+    "bootstrap.py": "684273c889a68270d0efef0b859bbe8e3a4cdc534536321ad78d998b3a97b901",
+    "environment.py": "16ca3ba8e6ee12374c52235607f8167d38a1f0f050224ec5adc39eb3ff7f0d52",
+    "replay.py": "1159b0815cbbe6fe12584ae5972d028d2c5105e7fac2ecf7496c247548fc32e1"
+  }
+}

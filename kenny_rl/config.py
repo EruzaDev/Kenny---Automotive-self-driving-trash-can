@@ -71,6 +71,7 @@ class EnvConfig:
     recovery_enabled: bool = False
     route_recovery_enabled: bool = False
     marker_sweep_enabled: bool = False
+    adaptive_speed_enabled: bool = False
     dt: float = 0.1
     max_steps: int = 1200
     grid_resolution: float = 0.25
@@ -84,6 +85,11 @@ class EnvConfig:
     sensor_noise: float = 0.015
     dropout: float = 0.015
     marker_dropout: float = 0.15
+    # Provisional motion-error surrogates; zero preserves existing checkpoints.
+    motion_range_noise_per_mps: float = 0.0
+    motion_range_noise_per_radps: float = 0.0
+    motion_marker_dropout_per_mps: float = 0.0
+    motion_marker_dropout_per_radps: float = 0.0
     history: int = 4
     map_mode: str = "known"
     route_clearance_weight: float = 0.0
@@ -98,6 +104,8 @@ class EnvConfig:
     def __post_init__(self):
         if type(self.marker_sweep_enabled) is not bool:
             raise ValueError("marker_sweep_enabled must be a boolean")
+        if type(self.adaptive_speed_enabled) is not bool:
+            raise ValueError("adaptive_speed_enabled must be a boolean")
         for name in ("world_size", "world_width", "world_height", "dt", "grid_resolution", "sensor_noise"):
             value = getattr(self, name)
             if value is None and name in ("world_width", "world_height"):
@@ -128,6 +136,11 @@ class EnvConfig:
             raise ValueError("Invalid world size, dt or episode length")
         if self.sensor_noise < 0:
             raise ValueError("sensor_noise must be nonnegative")
+        for name in ("motion_range_noise_per_mps", "motion_range_noise_per_radps",
+                     "motion_marker_dropout_per_mps", "motion_marker_dropout_per_radps"):
+            value = getattr(self, name)
+            if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
+                raise ValueError(f"{name} must be finite and nonnegative")
         if self.grid_resolution <= 0 or self.history < 1:
             raise ValueError("Invalid grid resolution or history")
         if not all(0 <= x < 1 for x in (self.dropout, self.marker_dropout)):
@@ -173,7 +186,7 @@ def validate_training(training):
                         "behavior_cloning_log_std": -1.}
     flags = {"dual_validation", "behavior_cloning_on_resume", "behavior_cloning_unshielded"}
     unknown = set(training) - (integer_defaults.keys() | numeric_defaults.keys() |
-                               flags | {"device", "vector_backend"})
+                               flags | {"device", "vector_backend", "behavior_cloning_stage"})
     if unknown:
         raise ValueError(f"Unknown training settings: {', '.join(sorted(unknown))}")
     for key, default in integer_defaults.items():
@@ -206,6 +219,8 @@ def validate_training(training):
             raise ValueError(f"{key} must be a boolean")
     if training.get("vector_backend", "dummy") not in ("dummy", "subproc"):
         raise ValueError("vector_backend must be dummy or subproc")
+    if training.get("behavior_cloning_stage") not in (None, "empty", "static", "mixed", "dynamic", "cliffs", "full"):
+        raise ValueError("Invalid behavior_cloning_stage")
     device = training.get("device", "cpu")
     if not isinstance(device, str) or not (device == "cpu" or
             device.startswith("cuda:") and device[5:].isdigit()):

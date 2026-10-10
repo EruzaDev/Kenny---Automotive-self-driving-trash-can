@@ -17,6 +17,23 @@ def make_env(robot, config):
     return Monitor(KennyEnv(robot, config))
 
 
+def validate_speed_transfer(old, new):
+    """Only permit speed-cap/controller changes for policy initialization."""
+    old, new = json.loads(json.dumps(old)), json.loads(json.dumps(new))
+    for contract in (old, new):
+        contract.pop("adaptive_speed_controller", None)
+        contract["robot"].pop("max_speed")
+    if old != new:
+        raise ValueError("Policy initialization requires matching sensors, observations and robot dynamics")
+
+
+def guarded_validation_score(result):
+    # If both candidates time out safely, prefer navigation reward before
+    # fewer interventions. An idle policy otherwise wins by requesting less.
+    return (result["success_rate"], -result["collision_rate"]-result["cliff_rate"],
+            result["mean_reward"], -result["intervention_fraction"])
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--config", default="configs/laptop.json")
@@ -25,9 +42,12 @@ def main():
     p.add_argument("--steps", type=int)
     p.add_argument("--stage", choices=["empty", "static", "mixed", "dynamic", "cliffs", "full"])
     p.add_argument("--resume", help="Checkpoint zip; write resumed run into a NEW directory")
+    p.add_argument("--initialize-policy", help="Copy compatible policy weights for a new speed experiment; resets PPO optimizer and counters")
     p.add_argument("--device", help="cpu or cuda:0; requires an appropriate PyTorch build")
     p.add_argument("--envs", type=int)
     args = p.parse_args()
+    if args.resume and args.initialize_policy:
+        p.error("Choose resume or policy initialization")
     robot, config, training = load_config(args.config)
     if config.split != "train":
         p.error("Training requires the train split")
@@ -68,6 +88,16 @@ def main():
         old = json.loads((source / "contract.json").read_text())
         if old != json.loads(json.dumps(contract)):
             p.error("Resume observation/robot contract differs; cannot reuse the checkpoint")
+    if args.initialize_policy:
+        source = Path(args.initialize_policy).resolve().parent
+        if source.name == "checkpoints":
+            source = source.parent
+        try:
+            if not Path(args.initialize_policy).is_file():
+                raise ValueError("Initialization checkpoint does not exist")
+            validate_speed_transfer(json.loads((source/"contract.json").read_text()), contract)
+        except (ValueError, OSError) as exc:
+            p.error(str(exc))
     run.mkdir(parents=True)
     (run/"config.json").write_text(json.dumps(serialize(robot, config, training), indent=2))
     (run/"contract.json").write_text(json.dumps(contract, indent=2))
@@ -75,6 +105,7 @@ def main():
     (run/"requirements.txt").write_text("\n".join(sorted(
         f"{d.metadata['Name']}=={d.version}" for d in importlib.metadata.distributions()))+"\n")
     (run/"metadata.json").write_text(json.dumps({"seed": args.seed, "resume": args.resume,
+        "initialize_policy": args.initialize_policy,
         "python": sys.version, "torch": torch.__version__, "schema": contract["version"],
         "hardware": device_info, "headless": True,
         "source_sha256": {f.name: hashlib.sha256(f.read_bytes()).hexdigest()
@@ -113,13 +144,23 @@ def train_model(robot, config, training, args, run, env, device):
                     n_steps=n_steps, batch_size=batch, n_epochs=training.get("n_epochs", 5),
                     tensorboard_log=str(run/"tensorboard"),
                     policy_kwargs={"net_arch": {"pi": [128, 128], "vf": [128, 128]}}, verbose=1)
+        if getattr(args, "initialize_policy", None):
+            source_model = PPO.load(args.initialize_policy, device=device, custom_objects={
+                "lr_schedule": lambda _: 0., "learning_rate": 0.,
+                "clip_range": lambda _: .2, "clip_range_vf": None})
+            model.policy.load_state_dict(source_model.policy.state_dict(), strict=True)
+            del source_model
+            model.save(run/"initialized")
+            print("Initialized policy weights; PPO optimizer and step counter are new", flush=True)
     cloning_episodes = training.get("behavior_cloning_episodes", 0)
-    clone_now = cloning_episodes and (not args.resume or training.get("behavior_cloning_on_resume", False))
+    clone_now = cloning_episodes and not getattr(args, "initialize_policy", None) and (not args.resume or training.get("behavior_cloning_on_resume", False))
     if clone_now:
         from .bootstrap import collect_demonstrations, clone_policy
         demonstration_config = config
+        if training.get("behavior_cloning_stage") is not None:
+            demonstration_config = replace(demonstration_config, stage=training["behavior_cloning_stage"])
         if training.get("behavior_cloning_unshielded", False):
-            demonstration_config = replace(config, shield=False, train_unshielded_fraction=0.)
+            demonstration_config = replace(demonstration_config, shield=False, train_unshielded_fraction=0.)
         observations, actions = collect_demonstrations(robot, demonstration_config,
                                                         cloning_episodes, args.seed*100000)
         losses = clone_policy(model, observations, actions,
@@ -158,9 +199,7 @@ def train_model(robot, config, training, args, run, env, device):
             # A stationary policy is collision-free but useless. Select curriculum
             # checkpoints by success first, then observed safety and guard reliance;
             # release qualification still requires zero observed contacts.
-            score = (result["success_rate"],
-                     -result["collision_rate"]-result["cliff_rate"],
-                     -result["intervention_fraction"], result["mean_reward"])
+            score = guarded_validation_score(result)
             if training.get("dual_validation", False):
                 if self.best_guarded is None or score > self.best_guarded:
                     self.best_guarded = score
