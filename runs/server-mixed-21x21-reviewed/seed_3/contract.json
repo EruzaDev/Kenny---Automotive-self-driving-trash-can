@@ -1,0 +1,98 @@
+{
+  "version": "kenny-geometric-v3",
+  "features": [
+    [
+      "lidar_range",
+      72
+    ],
+    [
+      "lidar_valid",
+      72
+    ],
+    [
+      "depth_range",
+      36
+    ],
+    [
+      "depth_valid",
+      36
+    ],
+    [
+      "floor_drop_range",
+      12
+    ],
+    [
+      "floor_valid",
+      12
+    ],
+    [
+      "downward_hazard",
+      3
+    ],
+    [
+      "downward_valid",
+      3
+    ],
+    [
+      "route_points_xy",
+      6
+    ],
+    [
+      "route_valid",
+      3
+    ],
+    [
+      "goal_relative_xy",
+      2
+    ],
+    [
+      "measured_velocity",
+      2
+    ],
+    [
+      "previous_requested_action",
+      2
+    ],
+    [
+      "previous_executed_action",
+      2
+    ],
+    [
+      "localization_health",
+      3
+    ],
+    [
+      "sensor_age_and_guard",
+      3
+    ]
+  ],
+  "frame_size": 269,
+  "history": 4,
+  "dt": 0.1,
+  "guard_min_braking_deceleration": 0.35,
+  "robot": {
+    "width": 0.23,
+    "length": 0.23,
+    "height": 0.485,
+    "track_width": 0.235,
+    "wheel_radius": 0.04,
+    "motor_rpm": 333.0,
+    "max_speed": 0.3,
+    "max_turn_rate": 0.6,
+    "acceleration": 0.5,
+    "angular_acceleration": 1.5,
+    "lidar_height": 0.22,
+    "lidar_range": 6.0,
+    "lidar_hz": 5.0,
+    "camera_height": 0.4,
+    "camera_pitch_deg": -15.0,
+    "camera_hfov_deg": 60.0,
+    "camera_vfov_deg": 50.0,
+    "camera_min_range": 0.4,
+    "camera_range": 4.0,
+    "marker_range": 2.5,
+    "cliff_lookahead": 0.12
+  },
+  "normalization": "fixed bounds in env._frame",
+  "actions": "v=(a0+1)/2*max_speed; omega=a1*max_turn_rate"
+}
