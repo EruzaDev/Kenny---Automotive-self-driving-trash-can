@@ -8,6 +8,12 @@ The [0.60, 0.80, and 1.00 m/s simulation checkpoints](runs/faster-noise-moving-p
 
 For Raspberry Pi 5, follow the [installation and live 3D depth GUI guide](docs/PI5_SETUP.md). The [tested Pi status](docs/PI5_SETUP_STATUS.md) records measured results and remaining hardware issues.
 
+For ESP32-WROOM with four encoder gearmotors and two L298N boards, see the [firmware and wiring guide](docs/ESP32_FIRMWARE.md).
+
+For phone control over the ESP32's own Wi-Fi, use the [mobile joystick firmware and setup guide](docs/ESP32_MOBILE_CONTROLLER.md). Select direct-GPIO or carrier-PCB wiring before upload.
+
+The [provisional Kenny carrier PCB](hardware/kenny_carrier/README.md) adds four encoder terminal blocks, MPU6050/HX711 headers, passive components and labeled silkscreen. Its module footprint needs verification; the mobile sketch supports its MCP23017 motor interface when carrier mode is selected.
+
 ![Generated training world with walls, moving people, bags, overhangs and cliffs](docs/training_world.png)
 
 ## Your robot

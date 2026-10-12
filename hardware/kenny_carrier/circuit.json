@@ -1,0 +1,1163 @@
+[
+  {
+    "ref": "U1",
+    "value": "ESP32-WROOM 38pin PROVISIONAL",
+    "footprint": "Kenny:ESP32_38_PROVISIONAL",
+    "pins": {
+      "1": "ESP_3V3",
+      "2": "ESP_EN",
+      "3": "ENC_LR_A",
+      "4": "ENC_RR_A",
+      "5": "ENC_LF_A",
+      "6": "ENC_RF_A",
+      "7": "PWM_LR",
+      "8": "PWM_RR",
+      "9": "PWM_LF",
+      "10": "PWM_RF",
+      "11": "ENC_LF_B",
+      "12": "ENC_RF_B",
+      "13": null,
+      "14": "GND",
+      "15": "ENC_LR_B",
+      "16": null,
+      "17": null,
+      "18": null,
+      "19": "USB_5V",
+      "20": "GND",
+      "21": "ENC_RR_B",
+      "22": "SCL",
+      "23": null,
+      "24": null,
+      "25": "SDA",
+      "26": "GND",
+      "27": null,
+      "28": "ESTOP",
+      "29": null,
+      "30": "HX_SCK",
+      "31": "HX_DOUT",
+      "32": null,
+      "33": null,
+      "34": null,
+      "35": null,
+      "36": null,
+      "37": null,
+      "38": null
+    },
+    "xy": [
+      44,
+      20
+    ],
+    "angle": 0,
+    "description": "2x19 female sockets; 2.54mm pitch; assumed 25.40mm row spacing; verify module",
+    "names": {
+      "1": "3V3",
+      "2": "EN",
+      "3": "GPIO36",
+      "4": "GPIO39",
+      "5": "GPIO34",
+      "6": "GPIO35",
+      "7": "GPIO32",
+      "8": "GPIO33",
+      "9": "GPIO25",
+      "10": "GPIO26",
+      "11": "GPIO27",
+      "12": "GPIO14",
+      "13": "GPIO12",
+      "14": "GND",
+      "15": "GPIO13",
+      "16": "GPIOSD2",
+      "17": "GPIOSD3",
+      "18": "GPIOCMD",
+      "19": "5V",
+      "20": "GND",
+      "21": "GPIO23",
+      "22": "GPIO22",
+      "23": "GPIOTX0",
+      "24": "GPIORX0",
+      "25": "GPIO21",
+      "26": "GND",
+      "27": "GPIO19",
+      "28": "GPIO18",
+      "29": "GPIO5",
+      "30": "GPIO17",
+      "31": "GPIO16",
+      "32": "GPIO4",
+      "33": "GPIO0",
+      "34": "GPIO2",
+      "35": "GPIO15",
+      "36": "GPIOSD1",
+      "37": "GPIOSD0",
+      "38": "GPIOCLK"
+    },
+    "uuid": "d7204a63-205f-5c7b-b476-e6629d4a1163"
+  },
+  {
+    "ref": "U2",
+    "value": "MCP23017-E/SO",
+    "footprint": "Package_SO:SOIC-28W_7.5x17.9mm_P1.27mm",
+    "pins": {
+      "1": "LF_IN1",
+      "2": "LF_IN2",
+      "3": "RF_IN1",
+      "4": "RF_IN2",
+      "5": "LR_IN1",
+      "6": "LR_IN2",
+      "7": "RR_IN1",
+      "8": "RR_IN2",
+      "9": "+3V3",
+      "10": "GND",
+      "11": null,
+      "12": "SCL",
+      "13": "SDA",
+      "14": null,
+      "15": "GND",
+      "16": "GND",
+      "17": "GND",
+      "18": "MCP_RESET",
+      "19": null,
+      "20": null,
+      "21": null,
+      "22": null,
+      "23": null,
+      "24": null,
+      "25": null,
+      "26": null,
+      "27": null,
+      "28": null
+    },
+    "xy": [
+      87,
+      68
+    ],
+    "angle": 0,
+    "description": "I2C address 0x20, GPB0..7 independent motor directions",
+    "names": {
+      "1": "GPB0",
+      "2": "GPB1",
+      "3": "GPB2",
+      "4": "GPB3",
+      "5": "GPB4",
+      "6": "GPB5",
+      "7": "GPB6",
+      "8": "GPB7",
+      "21": "GPA0",
+      "22": "GPA1",
+      "23": "GPA2",
+      "24": "GPA3",
+      "25": "GPA4",
+      "26": "GPA5",
+      "27": "GPA6",
+      "28": "GPA7",
+      "9": "VDD",
+      "10": "VSS",
+      "11": "NC",
+      "12": "SCL",
+      "13": "SDA",
+      "14": "NC",
+      "15": "A0",
+      "16": "A1",
+      "17": "A2",
+      "18": "~RESET",
+      "19": "INTB",
+      "20": "INTA"
+    },
+    "uuid": "09e7bb80-bbff-5c13-9f4e-daf1816bf5c9"
+  },
+  {
+    "ref": "U3",
+    "value": "AP2112K-3.3TRG1",
+    "footprint": "Package_TO_SOT_SMD:SOT-23-5",
+    "pins": {
+      "1": "USB_5V",
+      "2": "GND",
+      "3": "USB_5V",
+      "4": null,
+      "5": "+3V3"
+    },
+    "xy": [
+      84,
+      43
+    ],
+    "angle": 0,
+    "description": "Peripheral 3.3V LDO; input from DevKit USB 5V pin ONLY; 150mA initial budget",
+    "names": {
+      "1": "VIN",
+      "2": "GND",
+      "3": "EN",
+      "4": "NC",
+      "5": "VOUT"
+    },
+    "uuid": "a98a0384-d5eb-5b6a-9ab0-a3163e210445"
+  },
+  {
+    "ref": "J1",
+    "value": "LF ENCODER",
+    "footprint": "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND",
+      "3": "LF_A_RAW",
+      "4": "LF_B_RAW"
+    },
+    "xy": [
+      8,
+      12
+    ],
+    "angle": 270,
+    "description": "5.08mm 4-way terminal; 1 BLUE +3V3, 2 BLACK GND, 3 YELLOW A, 4 GREEN B",
+    "names": {},
+    "uuid": "7ba63c6e-8b56-5456-b62b-e10fb0675a9f"
+  },
+  {
+    "ref": "R1",
+    "value": "1k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "LF_A_RAW",
+      "2": "ENC_LF_A"
+    },
+    "xy": [
+      27,
+      22
+    ],
+    "angle": 0,
+    "description": "Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter",
+    "names": {},
+    "uuid": "7b36a6d0-fe03-5d1d-93e9-01fef330d2c3"
+  },
+  {
+    "ref": "C1",
+    "value": "1nF 50V C0G",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "ENC_LF_A",
+      "2": "GND"
+    },
+    "xy": [
+      33,
+      22
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "cc33d3d3-15ad-5e01-a682-dc18552cd517"
+  },
+  {
+    "ref": "R2",
+    "value": "1k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "LF_B_RAW",
+      "2": "ENC_LF_B"
+    },
+    "xy": [
+      27,
+      27
+    ],
+    "angle": 0,
+    "description": "Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter",
+    "names": {},
+    "uuid": "3225f338-62bd-5938-b0a4-e083b09225e5"
+  },
+  {
+    "ref": "C2",
+    "value": "1nF 50V C0G",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "ENC_LF_B",
+      "2": "GND"
+    },
+    "xy": [
+      33,
+      27
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "4d534052-29b7-547f-9704-4dc55b6c4145"
+  },
+  {
+    "ref": "C9",
+    "value": "100nF 16V X7R",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND"
+    },
+    "xy": [
+      29,
+      13
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "e66d09a8-f3ff-5180-a2da-a6c86294d23e"
+  },
+  {
+    "ref": "J2",
+    "value": "RF ENCODER",
+    "footprint": "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND",
+      "3": "RF_A_RAW",
+      "4": "RF_B_RAW"
+    },
+    "xy": [
+      8,
+      37
+    ],
+    "angle": 270,
+    "description": "5.08mm 4-way terminal; 1 BLUE +3V3, 2 BLACK GND, 3 YELLOW A, 4 GREEN B",
+    "names": {},
+    "uuid": "0e5fee13-8136-5833-b441-a3189d524b92"
+  },
+  {
+    "ref": "R3",
+    "value": "1k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "RF_A_RAW",
+      "2": "ENC_RF_A"
+    },
+    "xy": [
+      27,
+      47
+    ],
+    "angle": 0,
+    "description": "Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter",
+    "names": {},
+    "uuid": "5d511538-6d38-50a9-aab8-bf0166d683f8"
+  },
+  {
+    "ref": "C3",
+    "value": "1nF 50V C0G",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "ENC_RF_A",
+      "2": "GND"
+    },
+    "xy": [
+      33,
+      47
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "256cb7a5-12eb-5308-bef8-700eb0982f19"
+  },
+  {
+    "ref": "R4",
+    "value": "1k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "RF_B_RAW",
+      "2": "ENC_RF_B"
+    },
+    "xy": [
+      27,
+      52
+    ],
+    "angle": 0,
+    "description": "Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter",
+    "names": {},
+    "uuid": "7beef224-1c90-5b5e-beca-ec3545ec754d"
+  },
+  {
+    "ref": "C4",
+    "value": "1nF 50V C0G",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "ENC_RF_B",
+      "2": "GND"
+    },
+    "xy": [
+      33,
+      52
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "c9dd2b95-e371-574d-ba42-0ebd97e9374c"
+  },
+  {
+    "ref": "C10",
+    "value": "100nF 16V X7R",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND"
+    },
+    "xy": [
+      29,
+      38
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "57bc8a6e-09aa-5e6c-b10a-8809f7d88ad8"
+  },
+  {
+    "ref": "J3",
+    "value": "LR ENCODER",
+    "footprint": "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND",
+      "3": "LR_A_RAW",
+      "4": "LR_B_RAW"
+    },
+    "xy": [
+      8,
+      62
+    ],
+    "angle": 270,
+    "description": "5.08mm 4-way terminal; 1 BLUE +3V3, 2 BLACK GND, 3 YELLOW A, 4 GREEN B",
+    "names": {},
+    "uuid": "cf0f881d-1216-5600-8ab9-75fb2b5fd433"
+  },
+  {
+    "ref": "R5",
+    "value": "1k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "LR_A_RAW",
+      "2": "ENC_LR_A"
+    },
+    "xy": [
+      27,
+      72
+    ],
+    "angle": 0,
+    "description": "Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter",
+    "names": {},
+    "uuid": "dedab042-ff63-5af8-9518-91da86f80917"
+  },
+  {
+    "ref": "C5",
+    "value": "1nF 50V C0G",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "ENC_LR_A",
+      "2": "GND"
+    },
+    "xy": [
+      33,
+      72
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "75df023b-5ef7-54f7-ac96-a99e7541afaf"
+  },
+  {
+    "ref": "R6",
+    "value": "1k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "LR_B_RAW",
+      "2": "ENC_LR_B"
+    },
+    "xy": [
+      27,
+      77
+    ],
+    "angle": 0,
+    "description": "Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter",
+    "names": {},
+    "uuid": "0cdc662d-3a29-5cf4-84a0-6906e8951958"
+  },
+  {
+    "ref": "C6",
+    "value": "1nF 50V C0G",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "ENC_LR_B",
+      "2": "GND"
+    },
+    "xy": [
+      33,
+      77
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "c3191342-6466-500a-86d1-8a2347d9c4a2"
+  },
+  {
+    "ref": "C11",
+    "value": "100nF 16V X7R",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND"
+    },
+    "xy": [
+      29,
+      63
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "fb8313c4-17e4-5867-b838-cbc839e87aaf"
+  },
+  {
+    "ref": "J4",
+    "value": "RR ENCODER",
+    "footprint": "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND",
+      "3": "RR_A_RAW",
+      "4": "RR_B_RAW"
+    },
+    "xy": [
+      8,
+      87
+    ],
+    "angle": 270,
+    "description": "5.08mm 4-way terminal; 1 BLUE +3V3, 2 BLACK GND, 3 YELLOW A, 4 GREEN B",
+    "names": {},
+    "uuid": "6e9e75aa-4430-5b46-819b-02e958b18883"
+  },
+  {
+    "ref": "R7",
+    "value": "1k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "RR_A_RAW",
+      "2": "ENC_RR_A"
+    },
+    "xy": [
+      27,
+      97
+    ],
+    "angle": 0,
+    "description": "Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter",
+    "names": {},
+    "uuid": "514b8d59-180b-5b11-997f-9325b4c57d04"
+  },
+  {
+    "ref": "C7",
+    "value": "1nF 50V C0G",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "ENC_RR_A",
+      "2": "GND"
+    },
+    "xy": [
+      33,
+      97
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "f1ba1a4e-c804-5f11-997e-927ce8b7ac62"
+  },
+  {
+    "ref": "R8",
+    "value": "1k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "RR_B_RAW",
+      "2": "ENC_RR_B"
+    },
+    "xy": [
+      27,
+      102
+    ],
+    "angle": 0,
+    "description": "Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter",
+    "names": {},
+    "uuid": "e4cddb5a-b245-5c73-ad64-934d36427a21"
+  },
+  {
+    "ref": "C8",
+    "value": "1nF 50V C0G",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "ENC_RR_B",
+      "2": "GND"
+    },
+    "xy": [
+      33,
+      102
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "ea8e618e-e765-51cc-8f81-21dde222f2e4"
+  },
+  {
+    "ref": "C12",
+    "value": "100nF 16V X7R",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND"
+    },
+    "xy": [
+      29,
+      88
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "cc7e7cea-99a6-529b-9de3-271fb42e9976"
+  },
+  {
+    "ref": "J5",
+    "value": "MPU6050",
+    "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND",
+      "3": "SDA",
+      "4": "SCL"
+    },
+    "xy": [
+      103,
+      10
+    ],
+    "angle": 0,
+    "description": "2.54mm Dupont: 3V3 GND SDA SCL; wire by signal, module header order can differ",
+    "names": {},
+    "uuid": "8036f667-963a-5bb8-bf14-bdedc8307e79"
+  },
+  {
+    "ref": "J6",
+    "value": "HX711 MODULE",
+    "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND",
+      "3": "HX_DOUT",
+      "4": "HX_SCK"
+    },
+    "xy": [
+      103,
+      25
+    ],
+    "angle": 0,
+    "description": "2.54mm Dupont: 3V3 GND DT SCK; raw load cell goes to HX711 E+/E-/A+/A-",
+    "names": {},
+    "uuid": "3cd87def-17aa-5df1-8f6e-2d4bd26b35bc"
+  },
+  {
+    "ref": "J7",
+    "value": "L298N FRONT",
+    "footprint": "TerminalBlock_Phoenix:TerminalBlock_Phoenix_PT-1,5-7-3.5-H_1x07_P3.50mm_Horizontal",
+    "pins": {
+      "1": "GND",
+      "2": "PWM_LF",
+      "3": "LF_IN1",
+      "4": "LF_IN2",
+      "5": "RF_IN1",
+      "6": "RF_IN2",
+      "7": "PWM_RF"
+    },
+    "xy": [
+      103,
+      55
+    ],
+    "angle": 270,
+    "description": "3.50mm 7-way terminal: GND ENA IN1 IN2 IN3 IN4 ENB; logic only",
+    "names": {},
+    "uuid": "2ac6ee86-a56d-5b29-b060-cf3449e9fb5d"
+  },
+  {
+    "ref": "J8",
+    "value": "L298N REAR",
+    "footprint": "TerminalBlock_Phoenix:TerminalBlock_Phoenix_PT-1,5-7-3.5-H_1x07_P3.50mm_Horizontal",
+    "pins": {
+      "1": "GND",
+      "2": "PWM_LR",
+      "3": "LR_IN1",
+      "4": "LR_IN2",
+      "5": "RR_IN1",
+      "6": "RR_IN2",
+      "7": "PWM_RR"
+    },
+    "xy": [
+      103,
+      87
+    ],
+    "angle": 270,
+    "description": "3.50mm 7-way terminal: GND ENA IN1 IN2 IN3 IN4 ENB; logic only",
+    "names": {},
+    "uuid": "fd21605b-6df5-5eeb-a865-6f4f780f2604"
+  },
+  {
+    "ref": "J9",
+    "value": "ESTOP NC",
+    "footprint": "TerminalBlock_Phoenix:TerminalBlock_Phoenix_PT-1,5-2-3.5-H_1x02_P3.50mm_Horizontal",
+    "pins": {
+      "1": "GND",
+      "2": "ESTOP"
+    },
+    "xy": [
+      79,
+      114
+    ],
+    "angle": 0,
+    "description": "3.50mm 2-way terminal; normally-closed contact to GND; open=stop; external power cut remains required",
+    "names": {},
+    "uuid": "ce9c4fa8-f7cd-50e6-8e77-abcf454427a1"
+  },
+  {
+    "ref": "R9",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "LF_IN1",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      62.0
+    ],
+    "angle": 0,
+    "description": "Direction pull-down; MCP pins are high impedance during reset",
+    "names": {},
+    "uuid": "e56ede37-3e2a-5f29-aeae-a2feb8fe2940"
+  },
+  {
+    "ref": "R10",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "LF_IN2",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      65.5
+    ],
+    "angle": 0,
+    "description": "Direction pull-down; MCP pins are high impedance during reset",
+    "names": {},
+    "uuid": "498d1424-5810-597b-9ee8-ca4f1acf7442"
+  },
+  {
+    "ref": "R11",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "RF_IN1",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      69.0
+    ],
+    "angle": 0,
+    "description": "Direction pull-down; MCP pins are high impedance during reset",
+    "names": {},
+    "uuid": "719b44f2-ed1a-530e-b4c9-36ac08ecc9d6"
+  },
+  {
+    "ref": "R12",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "RF_IN2",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      72.5
+    ],
+    "angle": 0,
+    "description": "Direction pull-down; MCP pins are high impedance during reset",
+    "names": {},
+    "uuid": "808f8429-fb94-5f73-ac04-3b458bfd0d91"
+  },
+  {
+    "ref": "R13",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "LR_IN1",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      94.0
+    ],
+    "angle": 0,
+    "description": "Direction pull-down; MCP pins are high impedance during reset",
+    "names": {},
+    "uuid": "a5109626-3ff2-5075-b520-952a29b6a7fc"
+  },
+  {
+    "ref": "R14",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "LR_IN2",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      97.5
+    ],
+    "angle": 0,
+    "description": "Direction pull-down; MCP pins are high impedance during reset",
+    "names": {},
+    "uuid": "66ed551c-4114-518b-8d4f-0188598b5bed"
+  },
+  {
+    "ref": "R15",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "RR_IN1",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      101.0
+    ],
+    "angle": 0,
+    "description": "Direction pull-down; MCP pins are high impedance during reset",
+    "names": {},
+    "uuid": "afc1237d-a365-53fc-bed2-7ba9f2bbffef"
+  },
+  {
+    "ref": "R16",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "RR_IN2",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      104.5
+    ],
+    "angle": 0,
+    "description": "Direction pull-down; MCP pins are high impedance during reset",
+    "names": {},
+    "uuid": "ad1ba23c-5a2f-565c-9ca8-dab92b2748d1"
+  },
+  {
+    "ref": "R17",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "PWM_LF",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      58.5
+    ],
+    "angle": 0,
+    "description": "Enable pull-down; REMOVE L298N ENA/ENB jumpers",
+    "names": {},
+    "uuid": "367850c1-bae8-54d9-9690-da0811614d98"
+  },
+  {
+    "ref": "R18",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "PWM_RF",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      76
+    ],
+    "angle": 0,
+    "description": "Enable pull-down; REMOVE L298N ENA/ENB jumpers",
+    "names": {},
+    "uuid": "87677158-a10e-5f90-89e6-b48322e92c7b"
+  },
+  {
+    "ref": "R19",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "PWM_LR",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      90.5
+    ],
+    "angle": 0,
+    "description": "Enable pull-down; REMOVE L298N ENA/ENB jumpers",
+    "names": {},
+    "uuid": "acfef608-8a8e-5293-83ee-1555491c669f"
+  },
+  {
+    "ref": "R20",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "PWM_RR",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      108
+    ],
+    "angle": 0,
+    "description": "Enable pull-down; REMOVE L298N ENA/ENB jumpers",
+    "names": {},
+    "uuid": "d213e95f-39e7-571b-91b0-3d62798a44a6"
+  },
+  {
+    "ref": "R21",
+    "value": "4.7k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "+3V3",
+      "2": "SDA"
+    },
+    "xy": [
+      83,
+      52
+    ],
+    "angle": 0,
+    "description": "I2C pull-up; depopulate if module pull-ups make total too low",
+    "names": {},
+    "uuid": "04842131-2713-55fe-9a72-69133f462ab7"
+  },
+  {
+    "ref": "R22",
+    "value": "4.7k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "+3V3",
+      "2": "SCL"
+    },
+    "xy": [
+      89,
+      52
+    ],
+    "angle": 0,
+    "description": "I2C pull-up",
+    "names": {},
+    "uuid": "e7b96fe7-ecdc-524a-be73-843d1827b1b9"
+  },
+  {
+    "ref": "R23",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "+3V3",
+      "2": "MCP_RESET"
+    },
+    "xy": [
+      78,
+      82
+    ],
+    "angle": 0,
+    "description": "MCP reset pull-up",
+    "names": {},
+    "uuid": "483bf60f-9ad4-5529-a3ac-14216f27dcd8"
+  },
+  {
+    "ref": "R24",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "ESP_3V3",
+      "2": "ESTOP"
+    },
+    "xy": [
+      88,
+      113
+    ],
+    "angle": 0,
+    "description": "E-stop input pull-up",
+    "names": {},
+    "uuid": "71d832cd-d4cf-5913-b311-482b67e6ab79"
+  },
+  {
+    "ref": "R25",
+    "value": "10k",
+    "footprint": "Resistor_SMD:R_0805_2012Metric",
+    "pins": {
+      "1": "HX_SCK",
+      "2": "GND"
+    },
+    "xy": [
+      95,
+      34
+    ],
+    "angle": 0,
+    "description": "Hold HX711 clock low during ESP reset",
+    "names": {},
+    "uuid": "76c28d4a-f940-553c-baf2-121924b61761"
+  },
+  {
+    "ref": "C13",
+    "value": "1uF 16V X7R",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "USB_5V",
+      "2": "GND"
+    },
+    "xy": [
+      79,
+      43
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "b3d180fb-7eb7-5632-b456-d0f59e332460"
+  },
+  {
+    "ref": "C14",
+    "value": "10uF 10V X5R",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND"
+    },
+    "xy": [
+      89,
+      43
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "f412f1de-6cb1-56d2-9d70-a9254546ffa8"
+  },
+  {
+    "ref": "C15",
+    "value": "100nF 16V X7R",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND"
+    },
+    "xy": [
+      77,
+      73
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "8a1e6e42-4c21-5edf-b6c8-422cd75fbd3c"
+  },
+  {
+    "ref": "C16",
+    "value": "100nF 16V X7R",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      14
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "487516f3-e994-5f45-bcda-9306a0eb60b1"
+  },
+  {
+    "ref": "C17",
+    "value": "100nF 16V X7R",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND"
+    },
+    "xy": [
+      96,
+      28
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "85181aea-6430-5e85-9613-df26341ae33d"
+  },
+  {
+    "ref": "C18",
+    "value": "10uF 10V X5R",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "+3V3",
+      "2": "GND"
+    },
+    "xy": [
+      89,
+      47
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "70bff8a9-d62e-5761-816d-0ae37d1131f9"
+  },
+  {
+    "ref": "C19",
+    "value": "100nF 16V X7R",
+    "footprint": "Capacitor_SMD:C_0805_2012Metric",
+    "pins": {
+      "1": "MCP_RESET",
+      "2": "GND"
+    },
+    "xy": [
+      84,
+      82
+    ],
+    "angle": 0,
+    "description": "",
+    "names": {},
+    "uuid": "89953cf9-73fd-5143-a946-78d70ece9774"
+  },
+  {
+    "ref": "TP1",
+    "value": "+3V3",
+    "footprint": "TestPoint:TestPoint_Pad_D2.0mm",
+    "pins": {
+      "1": "+3V3"
+    },
+    "xy": [
+      77,
+      38
+    ],
+    "angle": 0,
+    "description": "Supply measurement",
+    "names": {},
+    "uuid": "52b2a1da-7d49-508f-9286-b1f33256a00b"
+  },
+  {
+    "ref": "TP2",
+    "value": "GND",
+    "footprint": "TestPoint:TestPoint_Pad_D2.0mm",
+    "pins": {
+      "1": "GND"
+    },
+    "xy": [
+      83,
+      38
+    ],
+    "angle": 0,
+    "description": "Supply measurement",
+    "names": {},
+    "uuid": "271d6cce-d235-5877-8b64-b3347a3b546f"
+  },
+  {
+    "ref": "TP3",
+    "value": "USB_5V",
+    "footprint": "TestPoint:TestPoint_Pad_D2.0mm",
+    "pins": {
+      "1": "USB_5V"
+    },
+    "xy": [
+      89,
+      38
+    ],
+    "angle": 0,
+    "description": "Supply measurement",
+    "names": {},
+    "uuid": "57e6135a-7377-5400-8aee-6091cdce0c67"
+  }
+]

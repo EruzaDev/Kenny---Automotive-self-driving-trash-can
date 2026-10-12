@@ -86,6 +86,10 @@ def run_replay(environment, checkpoint, steps=1200, seed=42, model=None, control
                     'guard_reasons':list(env.guard_reasons),
                     'policy_requested_speed_m_s':float((env.requested[0]+1)*robot.max_speed/2),
                     'speed_m_s':float(env.velocity[0]*env.slip[0]),
+                    # Record the final guarded target, before simulated motor
+                    # gain, acceleration and slip. Frame n drives interval n-1.
+                    'command':{'v':float((env.executed[0]+1)*robot.max_speed/2),
+                               'w':float(env.executed[1]*robot.max_turn_rate)},
                     'adaptive_speed_limit_m_s':float(env.speed_governor_limit) if config.adaptive_speed_enabled else None,
                     'camera_visible_marker_ids':camera_marker_ids(env.world,env.pose,robot),
                     'marker_localization_updated':env.steps > 0 and env.marker_age == 0,

@@ -1,0 +1,10 @@
+** Drc report for /home/kenny/Kenny---Automotive-self-driving-trash-can/hardware/kenny_carrier/kenny_carrier_revA.kicad_pcb **
+** Created on 2026-10-11 20:02:29 **
+
+** Found 0 DRC violations **
+
+** Found 0 unconnected pads **
+
+** Found 0 Footprint errors **
+
+** End of Report **

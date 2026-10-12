@@ -1,0 +1,1574 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <design>
+    <source>/home/kenny/Kenny---Automotive-self-driving-trash-can/hardware/kenny_carrier/kenny_carrier_revA.kicad_sch</source>
+    <date>Sun Oct 11 19:50:59 2026</date>
+    <tool>Eeschema 7.0.11+dfsg-1build4</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title>KENNY ESP32 CARRIER - PROVISIONAL REV A</title>
+        <company/>
+        <rev>A-PROTOTYPE</rev>
+        <date/>
+        <source>kenny_carrier_revA.kicad_sch</source>
+        <comment number="1" value="ESP32 footprint and sensor-module pinout MUST be verified before fabrication"/>
+        <comment number="2" value="USB powered logic only; external L298N motor power; MCP23017 directions"/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="C1">
+      <value>1nF 50V C0G</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C1" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>cc33d3d3-15ad-5e01-a682-dc18552cd517</tstamps>
+    </comp>
+    <comp ref="C2">
+      <value>1nF 50V C0G</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C2" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>4d534052-29b7-547f-9704-4dc55b6c4145</tstamps>
+    </comp>
+    <comp ref="C3">
+      <value>1nF 50V C0G</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C3" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>256cb7a5-12eb-5308-bef8-700eb0982f19</tstamps>
+    </comp>
+    <comp ref="C4">
+      <value>1nF 50V C0G</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C4" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>c9dd2b95-e371-574d-ba42-0ebd97e9374c</tstamps>
+    </comp>
+    <comp ref="C5">
+      <value>1nF 50V C0G</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C5" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>75df023b-5ef7-54f7-ac96-a99e7541afaf</tstamps>
+    </comp>
+    <comp ref="C6">
+      <value>1nF 50V C0G</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C6" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>c3191342-6466-500a-86d1-8a2347d9c4a2</tstamps>
+    </comp>
+    <comp ref="C7">
+      <value>1nF 50V C0G</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C7" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>f1ba1a4e-c804-5f11-997e-927ce8b7ac62</tstamps>
+    </comp>
+    <comp ref="C8">
+      <value>1nF 50V C0G</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C8" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>ea8e618e-e765-51cc-8f81-21dde222f2e4</tstamps>
+    </comp>
+    <comp ref="C9">
+      <value>100nF 16V X7R</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C9" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e66d09a8-f3ff-5180-a2da-a6c86294d23e</tstamps>
+    </comp>
+    <comp ref="C10">
+      <value>100nF 16V X7R</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C10" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>57bc8a6e-09aa-5e6c-b10a-8809f7d88ad8</tstamps>
+    </comp>
+    <comp ref="C11">
+      <value>100nF 16V X7R</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C11" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>fb8313c4-17e4-5867-b838-cbc839e87aaf</tstamps>
+    </comp>
+    <comp ref="C12">
+      <value>100nF 16V X7R</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C12" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>cc7e7cea-99a6-529b-9de3-271fb42e9976</tstamps>
+    </comp>
+    <comp ref="C13">
+      <value>1uF 16V X7R</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C13" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>b3d180fb-7eb7-5632-b456-d0f59e332460</tstamps>
+    </comp>
+    <comp ref="C14">
+      <value>10uF 10V X5R</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C14" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>f412f1de-6cb1-56d2-9d70-a9254546ffa8</tstamps>
+    </comp>
+    <comp ref="C15">
+      <value>100nF 16V X7R</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C15" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>8a1e6e42-4c21-5edf-b6c8-422cd75fbd3c</tstamps>
+    </comp>
+    <comp ref="C16">
+      <value>100nF 16V X7R</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C16" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>487516f3-e994-5f45-bcda-9306a0eb60b1</tstamps>
+    </comp>
+    <comp ref="C17">
+      <value>100nF 16V X7R</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C17" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>85181aea-6430-5e85-9613-df26341ae33d</tstamps>
+    </comp>
+    <comp ref="C18">
+      <value>10uF 10V X5R</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C18" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>70bff8a9-d62e-5761-816d-0ae37d1131f9</tstamps>
+    </comp>
+    <comp ref="C19">
+      <value>100nF 16V X7R</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="C19" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>89953cf9-73fd-5143-a946-78d70ece9774</tstamps>
+    </comp>
+    <comp ref="J1">
+      <value>LF ENCODER</value>
+      <footprint>TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal</footprint>
+      <libsource lib="Kenny" part="J1" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>7ba63c6e-8b56-5456-b62b-e10fb0675a9f</tstamps>
+    </comp>
+    <comp ref="J2">
+      <value>RF ENCODER</value>
+      <footprint>TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal</footprint>
+      <libsource lib="Kenny" part="J2" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>0e5fee13-8136-5833-b441-a3189d524b92</tstamps>
+    </comp>
+    <comp ref="J3">
+      <value>LR ENCODER</value>
+      <footprint>TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal</footprint>
+      <libsource lib="Kenny" part="J3" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>cf0f881d-1216-5600-8ab9-75fb2b5fd433</tstamps>
+    </comp>
+    <comp ref="J4">
+      <value>RR ENCODER</value>
+      <footprint>TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal</footprint>
+      <libsource lib="Kenny" part="J4" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>6e9e75aa-4430-5b46-819b-02e958b18883</tstamps>
+    </comp>
+    <comp ref="J5">
+      <value>MPU6050</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical</footprint>
+      <libsource lib="Kenny" part="J5" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>8036f667-963a-5bb8-bf14-bdedc8307e79</tstamps>
+    </comp>
+    <comp ref="J6">
+      <value>HX711 MODULE</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical</footprint>
+      <libsource lib="Kenny" part="J6" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>3cd87def-17aa-5df1-8f6e-2d4bd26b35bc</tstamps>
+    </comp>
+    <comp ref="J7">
+      <value>L298N FRONT</value>
+      <footprint>TerminalBlock_Phoenix:TerminalBlock_Phoenix_PT-1,5-7-3.5-H_1x07_P3.50mm_Horizontal</footprint>
+      <libsource lib="Kenny" part="J7" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>2ac6ee86-a56d-5b29-b060-cf3449e9fb5d</tstamps>
+    </comp>
+    <comp ref="J8">
+      <value>L298N REAR</value>
+      <footprint>TerminalBlock_Phoenix:TerminalBlock_Phoenix_PT-1,5-7-3.5-H_1x07_P3.50mm_Horizontal</footprint>
+      <libsource lib="Kenny" part="J8" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>fd21605b-6df5-5eeb-a865-6f4f780f2604</tstamps>
+    </comp>
+    <comp ref="J9">
+      <value>ESTOP NC</value>
+      <footprint>TerminalBlock_Phoenix:TerminalBlock_Phoenix_PT-1,5-2-3.5-H_1x02_P3.50mm_Horizontal</footprint>
+      <libsource lib="Kenny" part="J9" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>ce9c4fa8-f7cd-50e6-8e77-abcf454427a1</tstamps>
+    </comp>
+    <comp ref="R1">
+      <value>1k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R1" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>7b36a6d0-fe03-5d1d-93e9-01fef330d2c3</tstamps>
+    </comp>
+    <comp ref="R2">
+      <value>1k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R2" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>3225f338-62bd-5938-b0a4-e083b09225e5</tstamps>
+    </comp>
+    <comp ref="R3">
+      <value>1k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R3" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>5d511538-6d38-50a9-aab8-bf0166d683f8</tstamps>
+    </comp>
+    <comp ref="R4">
+      <value>1k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R4" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>7beef224-1c90-5b5e-beca-ec3545ec754d</tstamps>
+    </comp>
+    <comp ref="R5">
+      <value>1k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R5" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>dedab042-ff63-5af8-9518-91da86f80917</tstamps>
+    </comp>
+    <comp ref="R6">
+      <value>1k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R6" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>0cdc662d-3a29-5cf4-84a0-6906e8951958</tstamps>
+    </comp>
+    <comp ref="R7">
+      <value>1k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R7" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>514b8d59-180b-5b11-997f-9325b4c57d04</tstamps>
+    </comp>
+    <comp ref="R8">
+      <value>1k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R8" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e4cddb5a-b245-5c73-ad64-934d36427a21</tstamps>
+    </comp>
+    <comp ref="R9">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R9" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e56ede37-3e2a-5f29-aeae-a2feb8fe2940</tstamps>
+    </comp>
+    <comp ref="R10">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R10" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>498d1424-5810-597b-9ee8-ca4f1acf7442</tstamps>
+    </comp>
+    <comp ref="R11">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R11" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>719b44f2-ed1a-530e-b4c9-36ac08ecc9d6</tstamps>
+    </comp>
+    <comp ref="R12">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R12" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>808f8429-fb94-5f73-ac04-3b458bfd0d91</tstamps>
+    </comp>
+    <comp ref="R13">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R13" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>a5109626-3ff2-5075-b520-952a29b6a7fc</tstamps>
+    </comp>
+    <comp ref="R14">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R14" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>66ed551c-4114-518b-8d4f-0188598b5bed</tstamps>
+    </comp>
+    <comp ref="R15">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R15" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>afc1237d-a365-53fc-bed2-7ba9f2bbffef</tstamps>
+    </comp>
+    <comp ref="R16">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R16" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>ad1ba23c-5a2f-565c-9ca8-dab92b2748d1</tstamps>
+    </comp>
+    <comp ref="R17">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R17" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>367850c1-bae8-54d9-9690-da0811614d98</tstamps>
+    </comp>
+    <comp ref="R18">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R18" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>87677158-a10e-5f90-89e6-b48322e92c7b</tstamps>
+    </comp>
+    <comp ref="R19">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R19" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>acfef608-8a8e-5293-83ee-1555491c669f</tstamps>
+    </comp>
+    <comp ref="R20">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R20" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d213e95f-39e7-571b-91b0-3d62798a44a6</tstamps>
+    </comp>
+    <comp ref="R21">
+      <value>4.7k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R21" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>04842131-2713-55fe-9a72-69133f462ab7</tstamps>
+    </comp>
+    <comp ref="R22">
+      <value>4.7k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R22" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>e7b96fe7-ecdc-524a-be73-843d1827b1b9</tstamps>
+    </comp>
+    <comp ref="R23">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R23" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>483bf60f-9ad4-5529-a3ac-14216f27dcd8</tstamps>
+    </comp>
+    <comp ref="R24">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R24" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>71d832cd-d4cf-5913-b311-482b67e6ab79</tstamps>
+    </comp>
+    <comp ref="R25">
+      <value>10k</value>
+      <footprint>Resistor_SMD:R_0805_2012Metric</footprint>
+      <libsource lib="Kenny" part="R25" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>76c28d4a-f940-553c-baf2-121924b61761</tstamps>
+    </comp>
+    <comp ref="TP1">
+      <value>+3V3</value>
+      <footprint>TestPoint:TestPoint_Pad_D2.0mm</footprint>
+      <libsource lib="Kenny" part="TP1" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>52b2a1da-7d49-508f-9286-b1f33256a00b</tstamps>
+    </comp>
+    <comp ref="TP2">
+      <value>GND</value>
+      <footprint>TestPoint:TestPoint_Pad_D2.0mm</footprint>
+      <libsource lib="Kenny" part="TP2" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>271d6cce-d235-5877-8b64-b3347a3b546f</tstamps>
+    </comp>
+    <comp ref="TP3">
+      <value>USB_5V</value>
+      <footprint>TestPoint:TestPoint_Pad_D2.0mm</footprint>
+      <libsource lib="Kenny" part="TP3" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>57e6135a-7377-5400-8aee-6091cdce0c67</tstamps>
+    </comp>
+    <comp ref="U1">
+      <value>ESP32-WROOM 38pin PROVISIONAL</value>
+      <footprint>Kenny:ESP32_38_PROVISIONAL</footprint>
+      <libsource lib="Kenny" part="U1" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d7204a63-205f-5c7b-b476-e6629d4a1163</tstamps>
+    </comp>
+    <comp ref="U2">
+      <value>MCP23017-E/SO</value>
+      <footprint>Package_SO:SOIC-28W_7.5x17.9mm_P1.27mm</footprint>
+      <libsource lib="Kenny" part="U2" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>09e7bb80-bbff-5c13-9f4e-daf1816bf5c9</tstamps>
+    </comp>
+    <comp ref="U3">
+      <value>AP2112K-3.3TRG1</value>
+      <footprint>Package_TO_SOT_SMD:SOT-23-5</footprint>
+      <libsource lib="Kenny" part="U3" description=""/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="kenny_carrier_revA.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>a98a0384-d5eb-5b6a-9ab0-a3163e210445</tstamps>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Kenny" part="C1">
+      <fields>
+        <field name="Reference">C1</field>
+        <field name="Value">1nF 50V C0G</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C10">
+      <fields>
+        <field name="Reference">C10</field>
+        <field name="Value">100nF 16V X7R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C11">
+      <fields>
+        <field name="Reference">C11</field>
+        <field name="Value">100nF 16V X7R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C12">
+      <fields>
+        <field name="Reference">C12</field>
+        <field name="Value">100nF 16V X7R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C13">
+      <fields>
+        <field name="Reference">C13</field>
+        <field name="Value">1uF 16V X7R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C14">
+      <fields>
+        <field name="Reference">C14</field>
+        <field name="Value">10uF 10V X5R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C15">
+      <fields>
+        <field name="Reference">C15</field>
+        <field name="Value">100nF 16V X7R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C16">
+      <fields>
+        <field name="Reference">C16</field>
+        <field name="Value">100nF 16V X7R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C17">
+      <fields>
+        <field name="Reference">C17</field>
+        <field name="Value">100nF 16V X7R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C18">
+      <fields>
+        <field name="Reference">C18</field>
+        <field name="Value">10uF 10V X5R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C19">
+      <fields>
+        <field name="Reference">C19</field>
+        <field name="Value">100nF 16V X7R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C2">
+      <fields>
+        <field name="Reference">C2</field>
+        <field name="Value">1nF 50V C0G</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C3">
+      <fields>
+        <field name="Reference">C3</field>
+        <field name="Value">1nF 50V C0G</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C4">
+      <fields>
+        <field name="Reference">C4</field>
+        <field name="Value">1nF 50V C0G</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C5">
+      <fields>
+        <field name="Reference">C5</field>
+        <field name="Value">1nF 50V C0G</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C6">
+      <fields>
+        <field name="Reference">C6</field>
+        <field name="Value">1nF 50V C0G</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C7">
+      <fields>
+        <field name="Reference">C7</field>
+        <field name="Value">1nF 50V C0G</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C8">
+      <fields>
+        <field name="Reference">C8</field>
+        <field name="Value">1nF 50V C0G</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="C9">
+      <fields>
+        <field name="Reference">C9</field>
+        <field name="Value">100nF 16V X7R</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="J1">
+      <fields>
+        <field name="Reference">J1</field>
+        <field name="Value">LF ENCODER</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+        <pin num="3" name="3" type="passive"/>
+        <pin num="4" name="4" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="J2">
+      <fields>
+        <field name="Reference">J2</field>
+        <field name="Value">RF ENCODER</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+        <pin num="3" name="3" type="passive"/>
+        <pin num="4" name="4" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="J3">
+      <fields>
+        <field name="Reference">J3</field>
+        <field name="Value">LR ENCODER</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+        <pin num="3" name="3" type="passive"/>
+        <pin num="4" name="4" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="J4">
+      <fields>
+        <field name="Reference">J4</field>
+        <field name="Value">RR ENCODER</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+        <pin num="3" name="3" type="passive"/>
+        <pin num="4" name="4" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="J5">
+      <fields>
+        <field name="Reference">J5</field>
+        <field name="Value">MPU6050</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+        <pin num="3" name="3" type="passive"/>
+        <pin num="4" name="4" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="J6">
+      <fields>
+        <field name="Reference">J6</field>
+        <field name="Value">HX711 MODULE</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+        <pin num="3" name="3" type="passive"/>
+        <pin num="4" name="4" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="J7">
+      <fields>
+        <field name="Reference">J7</field>
+        <field name="Value">L298N FRONT</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+        <pin num="3" name="3" type="passive"/>
+        <pin num="4" name="4" type="passive"/>
+        <pin num="5" name="5" type="passive"/>
+        <pin num="6" name="6" type="passive"/>
+        <pin num="7" name="7" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="J8">
+      <fields>
+        <field name="Reference">J8</field>
+        <field name="Value">L298N REAR</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+        <pin num="3" name="3" type="passive"/>
+        <pin num="4" name="4" type="passive"/>
+        <pin num="5" name="5" type="passive"/>
+        <pin num="6" name="6" type="passive"/>
+        <pin num="7" name="7" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="J9">
+      <fields>
+        <field name="Reference">J9</field>
+        <field name="Value">ESTOP NC</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R1">
+      <fields>
+        <field name="Reference">R1</field>
+        <field name="Value">1k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R10">
+      <fields>
+        <field name="Reference">R10</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R11">
+      <fields>
+        <field name="Reference">R11</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R12">
+      <fields>
+        <field name="Reference">R12</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R13">
+      <fields>
+        <field name="Reference">R13</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R14">
+      <fields>
+        <field name="Reference">R14</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R15">
+      <fields>
+        <field name="Reference">R15</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R16">
+      <fields>
+        <field name="Reference">R16</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R17">
+      <fields>
+        <field name="Reference">R17</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R18">
+      <fields>
+        <field name="Reference">R18</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R19">
+      <fields>
+        <field name="Reference">R19</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R2">
+      <fields>
+        <field name="Reference">R2</field>
+        <field name="Value">1k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R20">
+      <fields>
+        <field name="Reference">R20</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R21">
+      <fields>
+        <field name="Reference">R21</field>
+        <field name="Value">4.7k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R22">
+      <fields>
+        <field name="Reference">R22</field>
+        <field name="Value">4.7k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R23">
+      <fields>
+        <field name="Reference">R23</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R24">
+      <fields>
+        <field name="Reference">R24</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R25">
+      <fields>
+        <field name="Reference">R25</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R3">
+      <fields>
+        <field name="Reference">R3</field>
+        <field name="Value">1k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R4">
+      <fields>
+        <field name="Reference">R4</field>
+        <field name="Value">1k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R5">
+      <fields>
+        <field name="Reference">R5</field>
+        <field name="Value">1k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R6">
+      <fields>
+        <field name="Reference">R6</field>
+        <field name="Value">1k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R7">
+      <fields>
+        <field name="Reference">R7</field>
+        <field name="Value">1k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R8">
+      <fields>
+        <field name="Reference">R8</field>
+        <field name="Value">1k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="R9">
+      <fields>
+        <field name="Reference">R9</field>
+        <field name="Value">10k</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="TP1">
+      <fields>
+        <field name="Reference">TP1</field>
+        <field name="Value">+3V3</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="TP2">
+      <fields>
+        <field name="Reference">TP2</field>
+        <field name="Value">GND</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="TP3">
+      <fields>
+        <field name="Reference">TP3</field>
+        <field name="Value">USB_5V</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="U1">
+      <fields>
+        <field name="Reference">U1</field>
+        <field name="Value">ESP32-WROOM 38pin PROVISIONAL</field>
+      </fields>
+      <pins>
+        <pin num="1" name="3V3" type="passive"/>
+        <pin num="2" name="EN" type="passive"/>
+        <pin num="3" name="GPIO36" type="passive"/>
+        <pin num="4" name="GPIO39" type="passive"/>
+        <pin num="5" name="GPIO34" type="passive"/>
+        <pin num="6" name="GPIO35" type="passive"/>
+        <pin num="7" name="GPIO32" type="passive"/>
+        <pin num="8" name="GPIO33" type="passive"/>
+        <pin num="9" name="GPIO25" type="passive"/>
+        <pin num="10" name="GPIO26" type="passive"/>
+        <pin num="11" name="GPIO27" type="passive"/>
+        <pin num="12" name="GPIO14" type="passive"/>
+        <pin num="13" name="GPIO12" type="passive"/>
+        <pin num="14" name="GND" type="passive"/>
+        <pin num="15" name="GPIO13" type="passive"/>
+        <pin num="16" name="GPIOSD2" type="passive"/>
+        <pin num="17" name="GPIOSD3" type="passive"/>
+        <pin num="18" name="GPIOCMD" type="passive"/>
+        <pin num="19" name="5V" type="passive"/>
+        <pin num="20" name="GND" type="passive"/>
+        <pin num="21" name="GPIO23" type="passive"/>
+        <pin num="22" name="GPIO22" type="passive"/>
+        <pin num="23" name="GPIOTX0" type="passive"/>
+        <pin num="24" name="GPIORX0" type="passive"/>
+        <pin num="25" name="GPIO21" type="passive"/>
+        <pin num="26" name="GND" type="passive"/>
+        <pin num="27" name="GPIO19" type="passive"/>
+        <pin num="28" name="GPIO18" type="passive"/>
+        <pin num="29" name="GPIO5" type="passive"/>
+        <pin num="30" name="GPIO17" type="passive"/>
+        <pin num="31" name="GPIO16" type="passive"/>
+        <pin num="32" name="GPIO4" type="passive"/>
+        <pin num="33" name="GPIO0" type="passive"/>
+        <pin num="34" name="GPIO2" type="passive"/>
+        <pin num="35" name="GPIO15" type="passive"/>
+        <pin num="36" name="GPIOSD1" type="passive"/>
+        <pin num="37" name="GPIOSD0" type="passive"/>
+        <pin num="38" name="GPIOCLK" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="U2">
+      <fields>
+        <field name="Reference">U2</field>
+        <field name="Value">MCP23017-E/SO</field>
+      </fields>
+      <pins>
+        <pin num="1" name="GPB0" type="bidirectional"/>
+        <pin num="2" name="GPB1" type="bidirectional"/>
+        <pin num="3" name="GPB2" type="bidirectional"/>
+        <pin num="4" name="GPB3" type="bidirectional"/>
+        <pin num="5" name="GPB4" type="bidirectional"/>
+        <pin num="6" name="GPB5" type="bidirectional"/>
+        <pin num="7" name="GPB6" type="bidirectional"/>
+        <pin num="8" name="GPB7" type="bidirectional"/>
+        <pin num="9" name="VDD" type="power_in"/>
+        <pin num="10" name="VSS" type="power_in"/>
+        <pin num="11" name="NC" type="no_connect"/>
+        <pin num="12" name="SCL" type="input"/>
+        <pin num="13" name="SDA" type="bidirectional"/>
+        <pin num="14" name="NC" type="no_connect"/>
+        <pin num="15" name="A0" type="input"/>
+        <pin num="16" name="A1" type="input"/>
+        <pin num="17" name="A2" type="input"/>
+        <pin num="18" name="~RESET" type="input"/>
+        <pin num="19" name="INTB" type="output"/>
+        <pin num="20" name="INTA" type="output"/>
+        <pin num="21" name="GPA0" type="bidirectional"/>
+        <pin num="22" name="GPA1" type="bidirectional"/>
+        <pin num="23" name="GPA2" type="bidirectional"/>
+        <pin num="24" name="GPA3" type="bidirectional"/>
+        <pin num="25" name="GPA4" type="bidirectional"/>
+        <pin num="26" name="GPA5" type="bidirectional"/>
+        <pin num="27" name="GPA6" type="bidirectional"/>
+        <pin num="28" name="GPA7" type="bidirectional"/>
+      </pins>
+    </libpart>
+    <libpart lib="Kenny" part="U3">
+      <fields>
+        <field name="Reference">U3</field>
+        <field name="Value">AP2112K-3.3TRG1</field>
+      </fields>
+      <pins>
+        <pin num="1" name="VIN" type="passive"/>
+        <pin num="2" name="GND" type="passive"/>
+        <pin num="3" name="EN" type="passive"/>
+        <pin num="4" name="NC" type="passive"/>
+        <pin num="5" name="VOUT" type="passive"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries/>
+  <nets>
+    <net code="1" name="/+3V3">
+      <node ref="C10" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="C11" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="C12" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="C14" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="C15" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="C16" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="C17" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="C18" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="C9" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="J1" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="J2" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="J3" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="J4" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="J5" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="J6" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R21" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R22" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R23" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="TP1" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U2" pin="9" pinfunction="VDD" pintype="power_in"/>
+      <node ref="U3" pin="5" pinfunction="VOUT" pintype="passive"/>
+    </net>
+    <net code="2" name="/ENC_LF_A">
+      <node ref="C1" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R1" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U1" pin="5" pinfunction="GPIO34" pintype="passive"/>
+    </net>
+    <net code="3" name="/ENC_LF_B">
+      <node ref="C2" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R2" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U1" pin="11" pinfunction="GPIO27" pintype="passive"/>
+    </net>
+    <net code="4" name="/ENC_LR_A">
+      <node ref="C5" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R5" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U1" pin="3" pinfunction="GPIO36" pintype="passive"/>
+    </net>
+    <net code="5" name="/ENC_LR_B">
+      <node ref="C6" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R6" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U1" pin="15" pinfunction="GPIO13" pintype="passive"/>
+    </net>
+    <net code="6" name="/ENC_RF_A">
+      <node ref="C3" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R3" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U1" pin="6" pinfunction="GPIO35" pintype="passive"/>
+    </net>
+    <net code="7" name="/ENC_RF_B">
+      <node ref="C4" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R4" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U1" pin="12" pinfunction="GPIO14" pintype="passive"/>
+    </net>
+    <net code="8" name="/ENC_RR_A">
+      <node ref="C7" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R7" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U1" pin="4" pinfunction="GPIO39" pintype="passive"/>
+    </net>
+    <net code="9" name="/ENC_RR_B">
+      <node ref="C8" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R8" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U1" pin="21" pinfunction="GPIO23" pintype="passive"/>
+    </net>
+    <net code="10" name="/ESP_3V3">
+      <node ref="R24" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U1" pin="1" pinfunction="3V3" pintype="passive"/>
+    </net>
+    <net code="11" name="/ESP_EN">
+      <node ref="U1" pin="2" pinfunction="EN" pintype="passive"/>
+    </net>
+    <net code="12" name="/ESTOP">
+      <node ref="J9" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R24" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U1" pin="28" pinfunction="GPIO18" pintype="passive"/>
+    </net>
+    <net code="13" name="/GND">
+      <node ref="C1" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C10" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C11" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C12" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C13" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C14" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C15" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C16" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C17" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C18" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C19" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C2" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C3" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C4" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C5" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C6" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C7" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C8" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="C9" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="J1" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="J2" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="J3" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="J4" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="J5" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="J6" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="J7" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="J8" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="J9" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R10" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R11" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R12" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R13" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R14" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R15" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R16" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R17" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R18" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R19" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R20" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R25" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R9" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="TP2" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U1" pin="14" pinfunction="GND" pintype="passive"/>
+      <node ref="U1" pin="20" pinfunction="GND" pintype="passive"/>
+      <node ref="U1" pin="26" pinfunction="GND" pintype="passive"/>
+      <node ref="U2" pin="10" pinfunction="VSS" pintype="power_in"/>
+      <node ref="U2" pin="15" pinfunction="A0" pintype="input"/>
+      <node ref="U2" pin="16" pinfunction="A1" pintype="input"/>
+      <node ref="U2" pin="17" pinfunction="A2" pintype="input"/>
+      <node ref="U3" pin="2" pinfunction="GND" pintype="passive"/>
+    </net>
+    <net code="14" name="/HX_DOUT">
+      <node ref="J6" pin="3" pinfunction="3" pintype="passive"/>
+      <node ref="U1" pin="31" pinfunction="GPIO16" pintype="passive"/>
+    </net>
+    <net code="15" name="/HX_SCK">
+      <node ref="J6" pin="4" pinfunction="4" pintype="passive"/>
+      <node ref="R25" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U1" pin="30" pinfunction="GPIO17" pintype="passive"/>
+    </net>
+    <net code="16" name="/LF_A_RAW">
+      <node ref="J1" pin="3" pinfunction="3" pintype="passive"/>
+      <node ref="R1" pin="1" pinfunction="1" pintype="passive"/>
+    </net>
+    <net code="17" name="/LF_B_RAW">
+      <node ref="J1" pin="4" pinfunction="4" pintype="passive"/>
+      <node ref="R2" pin="1" pinfunction="1" pintype="passive"/>
+    </net>
+    <net code="18" name="/LF_IN1">
+      <node ref="J7" pin="3" pinfunction="3" pintype="passive"/>
+      <node ref="R9" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U2" pin="1" pinfunction="GPB0" pintype="bidirectional"/>
+    </net>
+    <net code="19" name="/LF_IN2">
+      <node ref="J7" pin="4" pinfunction="4" pintype="passive"/>
+      <node ref="R10" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U2" pin="2" pinfunction="GPB1" pintype="bidirectional"/>
+    </net>
+    <net code="20" name="/LR_A_RAW">
+      <node ref="J3" pin="3" pinfunction="3" pintype="passive"/>
+      <node ref="R5" pin="1" pinfunction="1" pintype="passive"/>
+    </net>
+    <net code="21" name="/LR_B_RAW">
+      <node ref="J3" pin="4" pinfunction="4" pintype="passive"/>
+      <node ref="R6" pin="1" pinfunction="1" pintype="passive"/>
+    </net>
+    <net code="22" name="/LR_IN1">
+      <node ref="J8" pin="3" pinfunction="3" pintype="passive"/>
+      <node ref="R13" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U2" pin="5" pinfunction="GPB4" pintype="bidirectional"/>
+    </net>
+    <net code="23" name="/LR_IN2">
+      <node ref="J8" pin="4" pinfunction="4" pintype="passive"/>
+      <node ref="R14" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U2" pin="6" pinfunction="GPB5" pintype="bidirectional"/>
+    </net>
+    <net code="24" name="/MCP_RESET">
+      <node ref="C19" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="R23" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U2" pin="18" pinfunction="~RESET" pintype="input"/>
+    </net>
+    <net code="25" name="/PWM_LF">
+      <node ref="J7" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R17" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U1" pin="9" pinfunction="GPIO25" pintype="passive"/>
+    </net>
+    <net code="26" name="/PWM_LR">
+      <node ref="J8" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="R19" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U1" pin="7" pinfunction="GPIO32" pintype="passive"/>
+    </net>
+    <net code="27" name="/PWM_RF">
+      <node ref="J7" pin="7" pinfunction="7" pintype="passive"/>
+      <node ref="R18" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U1" pin="10" pinfunction="GPIO26" pintype="passive"/>
+    </net>
+    <net code="28" name="/PWM_RR">
+      <node ref="J8" pin="7" pinfunction="7" pintype="passive"/>
+      <node ref="R20" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U1" pin="8" pinfunction="GPIO33" pintype="passive"/>
+    </net>
+    <net code="29" name="/RF_A_RAW">
+      <node ref="J2" pin="3" pinfunction="3" pintype="passive"/>
+      <node ref="R3" pin="1" pinfunction="1" pintype="passive"/>
+    </net>
+    <net code="30" name="/RF_B_RAW">
+      <node ref="J2" pin="4" pinfunction="4" pintype="passive"/>
+      <node ref="R4" pin="1" pinfunction="1" pintype="passive"/>
+    </net>
+    <net code="31" name="/RF_IN1">
+      <node ref="J7" pin="5" pinfunction="5" pintype="passive"/>
+      <node ref="R11" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U2" pin="3" pinfunction="GPB2" pintype="bidirectional"/>
+    </net>
+    <net code="32" name="/RF_IN2">
+      <node ref="J7" pin="6" pinfunction="6" pintype="passive"/>
+      <node ref="R12" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U2" pin="4" pinfunction="GPB3" pintype="bidirectional"/>
+    </net>
+    <net code="33" name="/RR_A_RAW">
+      <node ref="J4" pin="3" pinfunction="3" pintype="passive"/>
+      <node ref="R7" pin="1" pinfunction="1" pintype="passive"/>
+    </net>
+    <net code="34" name="/RR_B_RAW">
+      <node ref="J4" pin="4" pinfunction="4" pintype="passive"/>
+      <node ref="R8" pin="1" pinfunction="1" pintype="passive"/>
+    </net>
+    <net code="35" name="/RR_IN1">
+      <node ref="J8" pin="5" pinfunction="5" pintype="passive"/>
+      <node ref="R15" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U2" pin="7" pinfunction="GPB6" pintype="bidirectional"/>
+    </net>
+    <net code="36" name="/RR_IN2">
+      <node ref="J8" pin="6" pinfunction="6" pintype="passive"/>
+      <node ref="R16" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U2" pin="8" pinfunction="GPB7" pintype="bidirectional"/>
+    </net>
+    <net code="37" name="/SCL">
+      <node ref="J5" pin="4" pinfunction="4" pintype="passive"/>
+      <node ref="R22" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U1" pin="22" pinfunction="GPIO22" pintype="passive"/>
+      <node ref="U2" pin="12" pinfunction="SCL" pintype="input"/>
+    </net>
+    <net code="38" name="/SDA">
+      <node ref="J5" pin="3" pinfunction="3" pintype="passive"/>
+      <node ref="R21" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U1" pin="25" pinfunction="GPIO21" pintype="passive"/>
+      <node ref="U2" pin="13" pinfunction="SDA" pintype="bidirectional"/>
+    </net>
+    <net code="39" name="/USB_5V">
+      <node ref="C13" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="TP3" pin="1" pinfunction="1" pintype="passive"/>
+      <node ref="U1" pin="19" pinfunction="5V" pintype="passive"/>
+      <node ref="U3" pin="1" pinfunction="VIN" pintype="passive"/>
+      <node ref="U3" pin="3" pinfunction="EN" pintype="passive"/>
+    </net>
+    <net code="40" name="unconnected-(U1-GPIO0-Pad33)">
+      <node ref="U1" pin="33" pinfunction="GPIO0" pintype="passive+no_connect"/>
+    </net>
+    <net code="41" name="unconnected-(U1-GPIO2-Pad34)">
+      <node ref="U1" pin="34" pinfunction="GPIO2" pintype="passive+no_connect"/>
+    </net>
+    <net code="42" name="unconnected-(U1-GPIO4-Pad32)">
+      <node ref="U1" pin="32" pinfunction="GPIO4" pintype="passive+no_connect"/>
+    </net>
+    <net code="43" name="unconnected-(U1-GPIO5-Pad29)">
+      <node ref="U1" pin="29" pinfunction="GPIO5" pintype="passive+no_connect"/>
+    </net>
+    <net code="44" name="unconnected-(U1-GPIO12-Pad13)">
+      <node ref="U1" pin="13" pinfunction="GPIO12" pintype="passive+no_connect"/>
+    </net>
+    <net code="45" name="unconnected-(U1-GPIO15-Pad35)">
+      <node ref="U1" pin="35" pinfunction="GPIO15" pintype="passive+no_connect"/>
+    </net>
+    <net code="46" name="unconnected-(U1-GPIO19-Pad27)">
+      <node ref="U1" pin="27" pinfunction="GPIO19" pintype="passive+no_connect"/>
+    </net>
+    <net code="47" name="unconnected-(U1-GPIOCLK-Pad38)">
+      <node ref="U1" pin="38" pinfunction="GPIOCLK" pintype="passive+no_connect"/>
+    </net>
+    <net code="48" name="unconnected-(U1-GPIOCMD-Pad18)">
+      <node ref="U1" pin="18" pinfunction="GPIOCMD" pintype="passive+no_connect"/>
+    </net>
+    <net code="49" name="unconnected-(U1-GPIORX0-Pad24)">
+      <node ref="U1" pin="24" pinfunction="GPIORX0" pintype="passive+no_connect"/>
+    </net>
+    <net code="50" name="unconnected-(U1-GPIOSD0-Pad37)">
+      <node ref="U1" pin="37" pinfunction="GPIOSD0" pintype="passive+no_connect"/>
+    </net>
+    <net code="51" name="unconnected-(U1-GPIOSD1-Pad36)">
+      <node ref="U1" pin="36" pinfunction="GPIOSD1" pintype="passive+no_connect"/>
+    </net>
+    <net code="52" name="unconnected-(U1-GPIOSD2-Pad16)">
+      <node ref="U1" pin="16" pinfunction="GPIOSD2" pintype="passive+no_connect"/>
+    </net>
+    <net code="53" name="unconnected-(U1-GPIOSD3-Pad17)">
+      <node ref="U1" pin="17" pinfunction="GPIOSD3" pintype="passive+no_connect"/>
+    </net>
+    <net code="54" name="unconnected-(U1-GPIOTX0-Pad23)">
+      <node ref="U1" pin="23" pinfunction="GPIOTX0" pintype="passive+no_connect"/>
+    </net>
+    <net code="55" name="unconnected-(U2-GPA0-Pad21)">
+      <node ref="U2" pin="21" pinfunction="GPA0" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="56" name="unconnected-(U2-GPA1-Pad22)">
+      <node ref="U2" pin="22" pinfunction="GPA1" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="57" name="unconnected-(U2-GPA2-Pad23)">
+      <node ref="U2" pin="23" pinfunction="GPA2" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="58" name="unconnected-(U2-GPA3-Pad24)">
+      <node ref="U2" pin="24" pinfunction="GPA3" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="59" name="unconnected-(U2-GPA4-Pad25)">
+      <node ref="U2" pin="25" pinfunction="GPA4" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="60" name="unconnected-(U2-GPA5-Pad26)">
+      <node ref="U2" pin="26" pinfunction="GPA5" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="61" name="unconnected-(U2-GPA6-Pad27)">
+      <node ref="U2" pin="27" pinfunction="GPA6" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="62" name="unconnected-(U2-GPA7-Pad28)">
+      <node ref="U2" pin="28" pinfunction="GPA7" pintype="bidirectional+no_connect"/>
+    </net>
+    <net code="63" name="unconnected-(U2-INTA-Pad20)">
+      <node ref="U2" pin="20" pinfunction="INTA" pintype="output+no_connect"/>
+    </net>
+    <net code="64" name="unconnected-(U2-INTB-Pad19)">
+      <node ref="U2" pin="19" pinfunction="INTB" pintype="output+no_connect"/>
+    </net>
+    <net code="65" name="unconnected-(U2-NC-Pad11)">
+      <node ref="U2" pin="11" pinfunction="NC" pintype="no_connect"/>
+    </net>
+    <net code="66" name="unconnected-(U2-NC-Pad14)">
+      <node ref="U2" pin="14" pinfunction="NC" pintype="no_connect"/>
+    </net>
+    <net code="67" name="unconnected-(U3-NC-Pad4)">
+      <node ref="U3" pin="4" pinfunction="NC" pintype="passive+no_connect"/>
+    </net>
+  </nets>
+</export>

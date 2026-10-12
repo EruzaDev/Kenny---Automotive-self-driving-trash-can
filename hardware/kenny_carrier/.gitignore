@@ -1,0 +1,6 @@
+*.lck
+*.kicad_prl
+*-backups/
+~*
+review_gerbers/
+*.zip

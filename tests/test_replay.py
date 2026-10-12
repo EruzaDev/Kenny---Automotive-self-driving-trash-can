@@ -38,6 +38,7 @@ def test_real_environment_replay_records_world_coordinates_and_timeout(tmp_path)
     assert result['frames'][0]['route']
     assert result['frames'][-1]['event']=='timeout'
     for frame in result['frames']:
+        assert frame['command']=={'v':0.,'w':0.}
         scans=frame['sensors']
         for name,count in [('lidar',72),('depth',36),('floor',12)]:
             scan=scans[name]
@@ -48,6 +49,15 @@ def test_real_environment_replay_records_world_coordinates_and_timeout(tmp_path)
         assert scans['camera_hfov_deg']==60.
         assert isinstance(frame['guard_reasons'],list)
     json.dumps(result,allow_nan=False)
+
+
+def test_replay_records_guarded_targets_not_simulated_slip(tmp_path):
+    environment,checkpoint=setup_run(tmp_path)
+    class ForwardPolicy:
+        def predict(self,observation,deterministic):return np.array([1.,.25]),None
+    result=run_replay(environment,checkpoint,steps=3,model=ForwardPolicy())
+    assert result['frames'][1]['command']==pytest.approx({'v':.3,'w':.15})
+    assert result['frames'][1]['speed_m_s'] < result['frames'][1]['command']['v']
 
 
 def test_replay_rejects_incompatible_contract_and_bad_start(tmp_path):

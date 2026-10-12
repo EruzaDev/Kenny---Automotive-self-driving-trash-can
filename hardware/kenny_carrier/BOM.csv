@@ -1,0 +1,60 @@
+Reference,Value,Footprint,Description
+U1,ESP32-WROOM 38pin PROVISIONAL,Kenny:ESP32_38_PROVISIONAL,2x19 female sockets; 2.54mm pitch; assumed 25.40mm row spacing; verify module
+U2,MCP23017-E/SO,Package_SO:SOIC-28W_7.5x17.9mm_P1.27mm,"I2C address 0x20, GPB0..7 independent motor directions"
+U3,AP2112K-3.3TRG1,Package_TO_SOT_SMD:SOT-23-5,Peripheral 3.3V LDO; input from DevKit USB 5V pin ONLY; 150mA initial budget
+J1,LF ENCODER,"TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal","5.08mm 4-way terminal; 1 BLUE +3V3, 2 BLACK GND, 3 YELLOW A, 4 GREEN B"
+R1,1k,Resistor_SMD:R_0805_2012Metric,"Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter"
+C1,1nF 50V C0G,Capacitor_SMD:C_0805_2012Metric,
+R2,1k,Resistor_SMD:R_0805_2012Metric,"Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter"
+C2,1nF 50V C0G,Capacitor_SMD:C_0805_2012Metric,
+C9,100nF 16V X7R,Capacitor_SMD:C_0805_2012Metric,
+J2,RF ENCODER,"TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal","5.08mm 4-way terminal; 1 BLUE +3V3, 2 BLACK GND, 3 YELLOW A, 4 GREEN B"
+R3,1k,Resistor_SMD:R_0805_2012Metric,"Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter"
+C3,1nF 50V C0G,Capacitor_SMD:C_0805_2012Metric,
+R4,1k,Resistor_SMD:R_0805_2012Metric,"Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter"
+C4,1nF 50V C0G,Capacitor_SMD:C_0805_2012Metric,
+C10,100nF 16V X7R,Capacitor_SMD:C_0805_2012Metric,
+J3,LR ENCODER,"TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal","5.08mm 4-way terminal; 1 BLUE +3V3, 2 BLACK GND, 3 YELLOW A, 4 GREEN B"
+R5,1k,Resistor_SMD:R_0805_2012Metric,"Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter"
+C5,1nF 50V C0G,Capacitor_SMD:C_0805_2012Metric,
+R6,1k,Resistor_SMD:R_0805_2012Metric,"Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter"
+C6,1nF 50V C0G,Capacitor_SMD:C_0805_2012Metric,
+C11,100nF 16V X7R,Capacitor_SMD:C_0805_2012Metric,
+J4,RR ENCODER,"TerminalBlock_Phoenix:TerminalBlock_Phoenix_MKDS-1,5-4-5.08_1x04_P5.08mm_Horizontal","5.08mm 4-way terminal; 1 BLUE +3V3, 2 BLACK GND, 3 YELLOW A, 4 GREEN B"
+R7,1k,Resistor_SMD:R_0805_2012Metric,"Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter"
+C7,1nF 50V C0G,Capacitor_SMD:C_0805_2012Metric,
+R8,1k,Resistor_SMD:R_0805_2012Metric,"Encoder series resistor, together with 1nF gives 1us RC; NOT a level shifter"
+C8,1nF 50V C0G,Capacitor_SMD:C_0805_2012Metric,
+C12,100nF 16V X7R,Capacitor_SMD:C_0805_2012Metric,
+J5,MPU6050,Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical,"2.54mm Dupont: 3V3 GND SDA SCL; wire by signal, module header order can differ"
+J6,HX711 MODULE,Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical,2.54mm Dupont: 3V3 GND DT SCK; raw load cell goes to HX711 E+/E-/A+/A-
+J7,L298N FRONT,"TerminalBlock_Phoenix:TerminalBlock_Phoenix_PT-1,5-7-3.5-H_1x07_P3.50mm_Horizontal",3.50mm 7-way terminal: GND ENA IN1 IN2 IN3 IN4 ENB; logic only
+J8,L298N REAR,"TerminalBlock_Phoenix:TerminalBlock_Phoenix_PT-1,5-7-3.5-H_1x07_P3.50mm_Horizontal",3.50mm 7-way terminal: GND ENA IN1 IN2 IN3 IN4 ENB; logic only
+J9,ESTOP NC,"TerminalBlock_Phoenix:TerminalBlock_Phoenix_PT-1,5-2-3.5-H_1x02_P3.50mm_Horizontal",3.50mm 2-way terminal; normally-closed contact to GND; open=stop; external power cut remains required
+R9,10k,Resistor_SMD:R_0805_2012Metric,Direction pull-down; MCP pins are high impedance during reset
+R10,10k,Resistor_SMD:R_0805_2012Metric,Direction pull-down; MCP pins are high impedance during reset
+R11,10k,Resistor_SMD:R_0805_2012Metric,Direction pull-down; MCP pins are high impedance during reset
+R12,10k,Resistor_SMD:R_0805_2012Metric,Direction pull-down; MCP pins are high impedance during reset
+R13,10k,Resistor_SMD:R_0805_2012Metric,Direction pull-down; MCP pins are high impedance during reset
+R14,10k,Resistor_SMD:R_0805_2012Metric,Direction pull-down; MCP pins are high impedance during reset
+R15,10k,Resistor_SMD:R_0805_2012Metric,Direction pull-down; MCP pins are high impedance during reset
+R16,10k,Resistor_SMD:R_0805_2012Metric,Direction pull-down; MCP pins are high impedance during reset
+R17,10k,Resistor_SMD:R_0805_2012Metric,Enable pull-down; REMOVE L298N ENA/ENB jumpers
+R18,10k,Resistor_SMD:R_0805_2012Metric,Enable pull-down; REMOVE L298N ENA/ENB jumpers
+R19,10k,Resistor_SMD:R_0805_2012Metric,Enable pull-down; REMOVE L298N ENA/ENB jumpers
+R20,10k,Resistor_SMD:R_0805_2012Metric,Enable pull-down; REMOVE L298N ENA/ENB jumpers
+R21,4.7k,Resistor_SMD:R_0805_2012Metric,I2C pull-up; depopulate if module pull-ups make total too low
+R22,4.7k,Resistor_SMD:R_0805_2012Metric,I2C pull-up
+R23,10k,Resistor_SMD:R_0805_2012Metric,MCP reset pull-up
+R24,10k,Resistor_SMD:R_0805_2012Metric,E-stop input pull-up
+R25,10k,Resistor_SMD:R_0805_2012Metric,Hold HX711 clock low during ESP reset
+C13,1uF 16V X7R,Capacitor_SMD:C_0805_2012Metric,
+C14,10uF 10V X5R,Capacitor_SMD:C_0805_2012Metric,
+C15,100nF 16V X7R,Capacitor_SMD:C_0805_2012Metric,
+C16,100nF 16V X7R,Capacitor_SMD:C_0805_2012Metric,
+C17,100nF 16V X7R,Capacitor_SMD:C_0805_2012Metric,
+C18,10uF 10V X5R,Capacitor_SMD:C_0805_2012Metric,
+C19,100nF 16V X7R,Capacitor_SMD:C_0805_2012Metric,
+TP1,+3V3,TestPoint:TestPoint_Pad_D2.0mm,Supply measurement
+TP2,GND,TestPoint:TestPoint_Pad_D2.0mm,Supply measurement
+TP3,USB_5V,TestPoint:TestPoint_Pad_D2.0mm,Supply measurement
