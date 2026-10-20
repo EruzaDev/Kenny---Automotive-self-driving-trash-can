@@ -33,6 +33,12 @@ Motor 1 direction; IN3/IN4 control Motor 2 direction. ENA/ENB receive PWM.
 The L298 accepts 3.3 V control signals; no level shifter is needed on these
 ESP32-to-driver connections.
 
+The wheel-test firmware reverses M2's H-bridge direction on the left ESP32,
+because the left-front motor is mounted with opposite drive polarity. M2 +PWM
+therefore uses IN3 LOW and IN4 HIGH on the left board; M2 -PWM uses the
+opposite states. The right board retains the original direction mapping.
+This changes motor rotation only; check the M2 encoder sign separately.
+
 | Motor power wires | L298N terminals |
 | --- | --- |
 | Motor 1, two power wires | OUT1 and OUT2 |
@@ -42,16 +48,18 @@ Encoder wires do not connect to IN1–IN4 or OUT1–OUT4.
 
 ## Encoder wiring
 
-The final requested swap exchanges Motor 1 and Motor 2 encoder assignments
-on the **left ESP32**. It does not exchange A and B within either encoder.
+The left rear motor is M1 and the left front motor is M2. Their encoder
+assignments on the **left ESP32** were corrected in firmware after the
+physical encoders were found to be opposite the previous labels. This does
+not exchange A and B within either encoder or change the motor output wiring.
 The right side retains its preceding assignments.
 
-| Encoder signal | Left ESP32, after swap | Right ESP32 |
+| Encoder signal | Left ESP32 | Right ESP32 |
 | --- | --- | --- |
-| Motor 1 A | GPIO18 | GPIO34 |
-| Motor 1 B | GPIO21 | GPIO25 |
-| Motor 2 A | GPIO34 | GPIO18 |
-| Motor 2 B | GPIO25 | GPIO21 |
+| Motor 1 A | GPIO34 | GPIO34 |
+| Motor 1 B | GPIO25 | GPIO25 |
+| Motor 2 A | GPIO18 | GPIO18 |
+| Motor 2 B | GPIO21 | GPIO21 |
 | Both encoder GND wires | Shared GND | Shared GND |
 | Both encoder VCC wires | Confirm encoder-rated supply first | Confirm encoder-rated supply first |
 
@@ -147,6 +155,10 @@ Across a disconnected 10 kΩ resistor, expect roughly 10 kΩ rather than a
 continuity beep; measurements in an assembled circuit can include other paths.
 
 ## References
+
+The [encoder and powered PWM test guide](WHEEL_ENCODER_PWM_TEST.md) records the
+current 660-count calibration, the observed M1/M2 faults, and the GUI tuning
+procedure.
 
 - [Espressif ESP32-DevKitC pinout and power options](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32/esp32-devkitc/user_guide.html)
 - [Espressif GPIO limitations](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/gpio.html)
